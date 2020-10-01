@@ -1,0 +1,286 @@
+<action-model-config>
+  <div class={ `card card-flowing card-${props.getAction(props.action).color || 'primary'} mb-3` }>
+    <div class="card-header drag">
+      <div class="card-icon">
+        <i class={ props.getAction(props.action).icon } />
+      </div>
+
+      { props.getAction(props.action).title }
+
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">
+          Update Type
+        </label>
+        <eden-select data={ getTypes() } ref={ ref('type') } on-change={ (e, v) => onType(v) } />
+      </div>
+
+      <div class="mb-3" if={ modelTypes.includes(get('child.config.type') || 'this') }>
+        <label class="form-label">
+          Model
+        </label>
+        <eden-select ref={ ref('model') } on-change={ (e, val) => onModel(val) } url={ `/app/${props.dashup.get('_id')}/model/list` } placeholder="Select Model" data={ getModel() } />
+      </div>
+
+      <div class="mb-3" if={ queryTypes.includes(get('child.config.type') || 'this') }>
+        <label class="form-label">
+          Where
+        </label>
+        <dashup-query fields={ props.fields } on-change={ (v) => onQuery(v) } data-value={ get('child.config.query') ? JSON.parse(get('child.config.query')) : [] } />
+      </div>
+
+      <hr />
+
+      <div class="card mb-3" if={ !loading('model') && get('child.config.fields.0') && getFields().length }>
+        <div class="card-body pb-2">
+          <div each={ (field, i) in get('child.config.fields') } class="d-flex align-items-center mb-2">
+            <eden-select placeholder="Select new Field" data={ getFields(field) } on-change={ (e, value) => onFieldName(value, i) } placeholder="Set Value" class="flex-1 d-inline-block mr-1" />
+            <input class="form-control flex-1" value={ field.value || '' } onchange={ (e) => onFieldValue(e, i) } />
+            <button class="btn btn-danger ml-2" onclick={ (e) => onRemoveField(e, i) }>
+              <i class="fa fa-times" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-success" onclick={ (e) => onCreateField(e) }>
+        Add Field
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // export default base
+    export default class FlowActionUpdate {
+      /**
+       * on before mount
+       */
+      onBeforeMount(...args) {
+        // bind init
+        this.init = this.init.bind(this);
+        
+        // set values
+        this.modelTypes = ['create', 'update', 'updateOne', 'findOrCreate'];
+        this.queryTypes = ['update', 'updateOne', 'findOrCreate'];
+      }
+
+      /**
+       * on before mount
+       */
+      onMounted(...args) {
+        // check frotend
+        if (typeof window === 'undefined') return;
+        
+        // check type
+        if (this.modelTypes.includes(this.get('child.config.type') || 'this')) {
+          // init
+          this.init();
+        }
+      }
+
+      /**
+       * init
+       */
+      async init() {
+        // check model
+        if (!this.get('child.config.model.id')) return;
+
+        // loading model
+        this.loading('model', true);
+
+        // update fields
+        this.update({
+          fields : await eden.router.get(`/app/${this.props.dashup.get('_id')}/form/${this.get('child.config.model.id')}/fields`),
+        });
+
+        // loading model
+        this.loading('model', false);
+      }
+
+      /**
+       * on change when
+       *
+       * @param {Event} e
+       */
+      async onType(val) {
+        // check value
+        if (!val) val = this.refs.type.val();
+
+        // config
+        const config = this.get('child.config') || {};
+
+        // set type
+        config.type = val;
+
+        // set element
+        await this.props.onChild('config', config);
+        await this.init();
+      }
+
+      /**
+       * on change timing
+       *
+       * @param {Event} e
+       */
+      onQuery(v) {
+        // config
+        const config = this.get('child.config') || {};
+
+        // query
+        config.query = JSON.stringify(v);
+
+        // set element
+        this.props.onChild('query', config);
+      }
+
+      /**
+       * on model
+       */
+      async onModel(model) {
+        // get value
+        if (!model) model = this.refs.model.val();
+
+        // model
+        if (!model || !model.length) return;
+
+        // config
+        const config = this.get('child.config') || {};
+
+        // mod
+        const mod = this.props.dashup.page(model);
+
+        // set config
+        config.model = {
+          id   : mod.get('_id'),
+          name : mod.get('name'),
+        };
+        
+        // set model
+        await this.props.onChild('config', config);
+        await this.init();
+      }
+
+      /**
+       * on change timing
+       *
+       * @param {Event} e
+       */
+      onCreateField(e) {
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+
+        // config
+        const config = this.get('child.config') || {};
+
+        // create fields
+        if (!config.fields) config.fields = [];
+
+        // push
+        config.fields.push({});
+        
+        // set model
+        this.props.onChild('config', config);
+      }
+
+      /**
+       * on change timing
+       *
+       * @param {Event} e
+       */
+      onRemoveField(e, i) {
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+
+        // config
+        const config = this.get('child.config') || {};
+
+        // push
+        config.fields.splice(i, 1);
+        
+        // set model
+        this.props.onChild('config', config);
+      }
+
+      /**
+       * on field name
+       */
+      onFieldName(val, i) {
+        // config
+        const config = this.get('child.config') || {};
+
+        // set value
+        config.fields[i].name = val;
+        
+        // set model
+        this.props.onChild('config', config);
+      }
+
+      /**
+       * on field name
+       */
+      onFieldValue(e, i) {
+        // config
+        const config = this.get('child.config') || {};
+
+        // set value
+        config.fields[i].value = e.target.value;
+        
+        // set model
+        this.props.onChild('config', config);
+      }
+
+      /**
+       * get when
+       */
+      getTypes() {
+        // return when
+        return [['This Model', 'this'], ['Create Model', 'create'], ['Update Model', 'updateOne'], ['Update All Models', 'update'], ['Update or Create Model', 'findOrCreate']].map(([name, value]) => {
+          // return type
+          return {
+            name,
+            value,
+            selected : (this.get('child.config.type') || 'this') === value,
+          };
+        });
+      }
+
+      /**
+       * get model
+       */
+      getModel() {
+        // data
+        const model = this.get('child.config.model');
+
+        // model
+        if (model) {
+          // push
+          return [{
+            name     : model.name,
+            value    : model.id,
+            selected : true,
+          }];
+        }
+
+        // return no data
+        return [];
+      }
+
+      /**
+       * get fields
+       */
+      getFields(field = {}) {
+        // field
+        return ((this.modelTypes.includes(this.get('child.config.type') || 'this') ? this.state.fields : this.props.fields) || []).map((f) => {
+          // return field
+          return Object.assign({}, f, {
+            selected : field.name === f.value,
+          });
+        });
+      }
+    }
+
+  </script>
+</action-model-config>

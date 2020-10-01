@@ -1,0 +1,148 @@
+<trigger-model-config>
+  <span>
+    <eden-select class="d-inline-block w-auto mx-1" ref="model" on-change={ (e, val) => onChangeModel(val) } placeholder="Select Model" data={ getModel() } />
+    <eden-select class="d-inline-block w-auto mx-1" ref="when" on-change={ (e, val) => onChangeWhen(e, val) } multiple={ true } placeholder="Select When" data={ getWhen() } />
+    <span>
+      It's
+    </span>
+    <eden-select class="d-inline-block w-auto mx-1" ref="event" on-change={ (e, val) => onChangeEvent(val) } multiple={ true } placeholder="Select Event(s)" data={ getEvent() } />
+  </span>
+
+  <script>
+    /**
+     * export default
+     */
+    export default class TriggerModelConfig {
+      /**
+       * on before mount
+       */
+      onBeforeMount(...args) {
+        // bind init
+        this.init = this.init.bind(this);
+
+        // bind methods
+        this.onChangeWhen  = this.onChangeWhen.bind(this);
+        this.onChangeModel = this.onChangeModel.bind(this);
+        this.onChangeEvent = this.onChangeEvent.bind(this);
+
+        // bind
+        this.getWhen  = this.getWhen.bind(this);
+        this.getEvent = this.getEvent.bind(this);
+        this.getModel = this.getModel.bind(this);
+      }
+
+      /**
+       * on before mount
+       */
+      onMounted(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // init
+        this.init();
+      }
+
+      /**
+       * init
+       */
+      async init () {
+        // check model
+        if (!this.props.page.get('data.model.id')) return;
+        
+        // run set
+        this.props.props('fields', await eden.router.get(`/app/${eden.get('dashup').get('_id')}/form/${this.props.page.get('data.model.id')}/fields`));
+      }
+
+      /**
+       * on change when
+       *
+       * @param {Event} e
+       */
+      onChangeWhen(val) {
+        // check ref
+        if (!val) val = $('select', this.$('[ref="when"]')).val();
+
+        // set when
+        this.props.set('when', val);
+      }
+
+      /**
+       * on model
+       */
+      onChangeModel(model) {
+        // get value
+        if (!model) model = $('select', this.$('[ref="model"]')).val();
+
+        // model
+        if (!model || !model.length) return;
+
+        // mod
+        const mod = this.eden.get('dashup').page(model);
+        
+        // set model
+        this.props.set('model', {
+          id   : mod.get('_id'),
+          name : mod.get('name'),
+        });
+      }
+
+      /**
+       * on change when
+       *
+       * @param {Event} e
+       */
+      onChangeEvent(val) {
+        // get value
+        if (!val) val = $('select', this.$('[ref="event"]')).val();
+
+        // set when
+        this.props.set('event', val);
+      }
+
+      /**
+       * get when
+       */
+      getWhen() {
+        // return when
+        return ['Before', 'After'].map((type) => {
+          // return type
+          return {
+            name     : type,
+            value    : type.toLowerCase(),
+            selected : (this.props.page.get('data.when') || []).includes(type.toLowerCase()),
+          };
+        });
+      }
+
+      /**
+       * get when
+       */
+      getEvent() {
+        // return when
+        return ['Created', 'Updated', 'Removed'].map((type) => {
+          // return type
+          return {
+            name     : type,
+            value    : type.toLowerCase(),
+            selected : (this.props.page.get('data.event') || []).includes(type.toLowerCase()),
+          };
+        });
+      }
+
+      /**
+       * get model
+       */
+      getModel() {
+        // push
+        return Array.from(this.props.dashup.get('pages').values()).filter((p) => p.get('type') === 'model').map((page) => {
+          // return object
+          return {
+            name     : page.get('name'),
+            value    : page.get('_id'),
+            selected : page.get('_id') === this.props.page.get('data.model.id'),
+          }
+        });
+      }
+    }
+  </script>
+</trigger-model-config>
