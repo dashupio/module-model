@@ -9,13 +9,13 @@
       <i class="fa fa-spin fa-spinner h1" />
     </div>
     <div if={ !loading('grid') && props.page.get('data.forms.0') } class="dashup-grid">
-      <dashup-grid model={ props.page.get('_id') } groups={ getGroups() } fields={ getFields() } { ...getProps() } />
+      <dashup-view view="grid" type="page" model={ props.page.get('_id') } groups={ getGroups() } fields={ getFields() } { ...getProps() } />
     </div>
   </div>
 
   <script>
     // export default
-    export default class DashupPageModel {
+    export default class PageModelView {
 
       /**
        * on before mount
@@ -24,9 +24,14 @@
         // check frontend
         if (typeof window === 'undefined') return;
 
+        // safe update
+        this.safeUpdate = () => {
+          this.update();
+        };
+
         // listeners
-        //this.props.page.on('reload', this.init);
-        //this.props.page.on('data.forms', this.init);
+        this.props.page.on('reload', this.safeUpdate);
+        this.props.page.on('data.forms', this.safeUpdate);
       }
 
       /**
@@ -37,8 +42,8 @@
         if (typeof window === 'undefined') return;
 
         // listeners
-        //this.props.page.removeListener('reload', this.init);
-        //this.props.page.removeListener('data.forms', this.init);
+        this.props.page.removeListener('reload', this.safeUpdate);
+        this.props.page.removeListener('data.forms', this.safeUpdate);
       }
 
       /**
@@ -98,7 +103,10 @@
         const newProps = { ...(this.props) };
 
         // delete
+        delete newProps.type;
+        delete newProps.view;
         delete newProps.class;
+        delete newProps.struct;
 
         // return
         return newProps;
