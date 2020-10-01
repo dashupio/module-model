@@ -1,0 +1,155 @@
+<page-model-view>
+  <div>
+    <a href="#!" class="d-block alert alert-info mb-3" if={ !props.page.get('data.forms.0') } onclick={ (e) => props.onConfig(e) }>
+      <i class="fa fa-exclamation-triangle mr-2" />
+      Please select at least one <b>form</b> for the grid.
+    </a>
+
+    <div if={ loading('grid') || !state.grid } class="text-center my-5 py-5">
+      <i class="fa fa-spin fa-spinner h1" />
+    </div>
+    <div if={ !loading('grid') && state.grid && props.page.get('data.forms.0.id') } class="dashup-grid">
+      <dashup-grid-group each={ (group, i) in getGroups() } grid={ state.grid } group={ group } i={ i } { ...getProps() } />
+    </div>
+  </div>
+
+  <script>
+    // export default
+    export default class DashupPageModel {
+
+      /**
+       * on before mount
+       */
+      onBeforeMount(...args) {
+        // init
+        this.init = this.init.bind(this);
+        this.clearColumns = this.clearColumns.bind(this);
+
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // listeners
+        this.props.page.on('reload', this.init);
+        this.props.page.on('data.forms', this.init);
+        this.props.page.on('data.model', this.init);
+        this.props.page.on('data.model', this.clearColumns);
+      }
+
+      /**
+       * on before mount
+       */
+      onBeforeUnmount(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // listeners
+        this.props.page.removeListener('reload', this.init);
+        this.props.page.removeListener('data.forms', this.init);
+        this.props.page.removeListener('data.model', this.init);
+        this.props.page.removeListener('data.model', this.clearColumns);
+      }
+
+      /**
+       * on mounted
+       */
+      onMounted(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // init
+        this.init();
+      }
+
+      /**
+       * init
+       */
+      async init() {
+        // loading
+        this.loading('grid', true);
+
+        // fetch grid
+        const res = await fetch(`/app/grid/${this.props.page.get('_id')}`, {
+          method : 'POST',
+        });
+
+        // update
+        this.update({
+          grid : await res.json()
+        });
+
+        // loading
+        this.loading('grid', false);
+      }
+
+      /**
+       * clear columns
+       */
+      clearColumns() {
+        // clear columns
+        this.props.onData('columns', []);
+      }
+
+      /**
+       * get groups
+       */
+      getGroups() {
+        // check empty
+        if (!(this.props.page.get('data.group.options') || []).length) return [{}];
+
+        // return group
+        return this.props.page.get('data.group.options').map((option) => {
+          // return option
+          return {
+            ...option,
+
+            key : this.props.page.get('data.group.name') || this.props.page.get('data.group.uuid')
+          }
+        });
+      }
+
+      /**
+       * get props
+       */
+      getProps() {
+        // clone
+        const newProps = { ...(this.props) };
+
+        // delete
+        delete newProps.class;
+
+        // return
+        return newProps;
+      }
+
+      /**
+       * ref
+       */
+      ref(name) {
+        // set refs
+        if (!this.refs) this.refs = {};
+
+        // return ref function
+        return (that) => {
+          // set ref
+          this.refs[name] = that;
+        };
+      }
+
+      /**
+       * set loading
+       */
+      loading(type, way) {
+        // set loading
+        if (!this.__loading) this.__loading = new Map();
+
+        // check loading
+        if (!type) return !!Array.from(this.__loading.values()).find((v) => v);
+        if (typeof way === 'undefined') return !!this.__loading.get(type);
+
+        // set loading
+        this.__loading.set(type, way);
+        this.update();
+      }
+    }
+  </script>
+</page-model-view>

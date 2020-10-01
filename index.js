@@ -2,17 +2,12 @@
 const { Module } = require('@dashup/module');
 
 // import base
-const FlowPage = require('./pages/flow');
-
-// import base
-const HookAction   = require('./actions/hook');
-const EventAction  = require('./actions/event');
-const FilterAction = require('./actions/filter');
+const ModelPage = require('./pages/model');
 
 /**
  * export module
  */
-class FlowModule extends Module {
+class ModelModule extends Module {
 
   /**
    * construct discord module
@@ -36,7 +31,7 @@ class FlowModule extends Module {
    */
   pages(register) {
     // register sms action
-    register(FlowPage);
+    register(ModelPage);
   }
   
   /**
@@ -53,11 +48,8 @@ class FlowModule extends Module {
    */
   actions(register) {
     // register sms action
-    register(HookAction);
-    register(EventAction);
-    register(FilterAction);
   }
 }
 
 // create new
-module.exports = new FlowModule();
+module.exports = new ModelModule();
