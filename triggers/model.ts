@@ -1,10 +1,10 @@
 // import base
-import { Trigger } from '@dashup/module';
+import { Struct } from '@dashup/module';
 
 /**
  * create dashup action
  */
-export default class ModelTrigger extends Trigger {
+export default class ModelTrigger extends Struct {
 
   /**
    * returns action type

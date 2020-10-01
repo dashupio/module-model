@@ -5,11 +5,11 @@
       Please select at least one <b>form</b> for the grid.
     </a>
 
-    <div if={ loading('grid') || !state.grid } class="text-center my-5 py-5">
+    <div if={ loading('grid') } class="text-center my-5 py-5">
       <i class="fa fa-spin fa-spinner h1" />
     </div>
-    <div if={ !loading('grid') && state.grid && props.page.get('data.forms.0.id') } class="dashup-grid">
-      <dashup-grid-group each={ (group, i) in getGroups() } grid={ state.grid } group={ group } i={ i } { ...getProps() } />
+    <div if={ !loading('grid') && props.page.get('data.forms.0') } class="dashup-grid">
+      <dashup-grid model={ props.page.get('_id') } groups={ getGroups() } fields={ getFields() } { ...getProps() } />
     </div>
   </div>
 
@@ -21,18 +21,12 @@
        * on before mount
        */
       onBeforeMount(...args) {
-        // init
-        this.init = this.init.bind(this);
-        this.clearColumns = this.clearColumns.bind(this);
-
         // check frontend
         if (typeof window === 'undefined') return;
 
         // listeners
-        this.props.page.on('reload', this.init);
-        this.props.page.on('data.forms', this.init);
-        this.props.page.on('data.model', this.init);
-        this.props.page.on('data.model', this.clearColumns);
+        //this.props.page.on('reload', this.init);
+        //this.props.page.on('data.forms', this.init);
       }
 
       /**
@@ -43,68 +37,57 @@
         if (typeof window === 'undefined') return;
 
         // listeners
-        this.props.page.removeListener('reload', this.init);
-        this.props.page.removeListener('data.forms', this.init);
-        this.props.page.removeListener('data.model', this.init);
-        this.props.page.removeListener('data.model', this.clearColumns);
+        //this.props.page.removeListener('reload', this.init);
+        //this.props.page.removeListener('data.forms', this.init);
       }
 
       /**
-       * on mounted
+       * get fields
        */
-      onMounted(...args) {
-        // check frontend
-        if (typeof window === 'undefined') return;
+      getFields() {
+        // reduce
+        return (this.props.page.get('data.forms') || []).reduce((accum, form) => {
+          // check form
+          if (!form) return accum;
 
-        // init
-        this.init();
-      }
+          // get form
+          const actualForm = this.props.dashup.page(form);
 
-      /**
-       * init
-       */
-      async init() {
-        // loading
-        this.loading('grid', true);
+          // check fields
+          if (!actualForm || !actualForm.get('data.fields')) return [];
 
-        // fetch grid
-        const res = await fetch(`/app/grid/${this.props.page.get('_id')}`, {
-          method : 'POST',
-        });
+          // return data
+          accum.push(...(actualForm.get('data.fields').map((field) => {
+            // clone field
+            const newField = { ...field };
 
-        // update
-        this.update({
-          grid : await res.json()
-        });
+            // set form
+            newField.form = form;
 
-        // loading
-        this.loading('grid', false);
-      }
+            // new field
+            return newField;
+          })));
 
-      /**
-       * clear columns
-       */
-      clearColumns() {
-        // clear columns
-        this.props.onData('columns', []);
+          // return accum
+          return accum;
+        }, []);
       }
 
       /**
        * get groups
        */
       getGroups() {
-        // check empty
-        if (!(this.props.page.get('data.group.options') || []).length) return [{}];
+        // get group
+        if (!this.props.page.get('data.group')) return;
+
+        // get group field
+        const actualGroup = this.getFields().find((f) => f.uuid === this.props.page.get('data.group'));
+
+        // check group
+        if (!actualGroup) return;
 
         // return group
-        return this.props.page.get('data.group.options').map((option) => {
-          // return option
-          return {
-            ...option,
-
-            key : this.props.page.get('data.group.name') || this.props.page.get('data.group.uuid')
-          }
-        });
+        return (actualGroup.options || []);
       }
 
       /**

@@ -1,23 +1,23 @@
 <page-model-config>
-  <div class="mb-3">
-    <label class="form-label">
-      Grid Form
-    </label>
+  <div>
+    <div class="mb-3">
+      <label class="form-label">
+        Grid Form
+      </label>
+      <eden-select onchange={ (e, val) => onForms(val) } ref={ ref('forms') } placeholder="Select Form" data={ getForms() } multiple={ true } />
+      <small>
+        The forms that this grid will filter by.
+      </small>
+    </div>
 
-    <eden-select onchange={ () => onForms() } ref={ ref('forms') } url={ `/app/${props.dashup.get('_id')}/form/${props.page.get('_id')}/list` } placeholder="Select Form" data={ getForms() } multiple={ true } />
-
-    <small>
-      The forms that this grid will filter by.
-    </small>
-
-    <div if={ props.page.get('data.forms.0.id') }>
+    <div if={ props.page.get('data.forms.0') }>
       <hr />
         
       <div class="mb-3">
         <label class="form-label">
           Tag Field
         </label>
-        <eden-select on-change={ () => onTag() } ref={ ref('tag') } url={ `/app/${props.dashup.get('_id')}/form/${getGroupUrl()}/tag-select/fields` } placeholder="Select Tag Field" data={ getTag() } />
+        <eden-select on-change={ (e, val) => onTag(val) } ref={ ref('tag') } placeholder="Select Tag Field" data={ getTag() } />
         <small>
           Selecting a tag field will allow you to tag tasks.
         </small>
@@ -27,7 +27,7 @@
         <label class="form-label">
           User Field
         </label>
-        <eden-select on-change={ () => onUser() } ref={ ref('user') } url={ `/app/${props.dashup.get('_id')}/form/${getGroupUrl()}/user/fields` } placeholder="Select User Field" data={ getUser() } />
+        <eden-select on-change={ (e, val) => onUser(val) } ref={ ref('user') } placeholder="Select User Field" data={ getUser() } />
         <small>
           Selecting a user field will allow you to assign tasks to that user.
         </small>
@@ -38,7 +38,7 @@
           Filter By
         </label>
 
-        <dashup-query fields={ state.fields } on-change={ (val) => onFilter(val) } value={ props.page.get('data.filter') ? JSON.parse(props.page.get('data.filter')) : [] } />
+        <dashup-query fields={ getFields() } on-change={ (val) => onFilter(val) } value={ props.page.get('data.filter') ? JSON.parse(props.page.get('data.filter')) : [] } />
       </div>
     </div>
   </div>
@@ -47,12 +47,73 @@
     // export default
     export default class DashupConfigModel {
 
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // RIOT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
       /**
        * on before mount
        */
-      onMounted(...args) {
-        // init
-        this.init();
+      onBeforeMount() {
+        // bind methods
+        this.onTag = this.onTag.bind(this);
+        this.onUser = this.onUser.bind(this);
+        this.onForms = this.onForms.bind(this);
+        this.onFilter = this.onFilter.bind(this);
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // EVENT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * on model
+       */
+      onForms(val) {
+        // forms
+        if (!vals) vals = this.refs.forms.val();
+        if (!vals) vals = [];
+        if (!Array.isArray(vals)) vals = [vals];
+
+        // set module
+        const forms = vals.map((val) => {
+          // return form
+          return this.props.dashup.page(val);
+        });
+        
+        // set model
+        this.props.data('forms', forms.map((mod) => {
+          // return forms
+          return mod.get('_id');
+        }));
+      }
+
+      /**
+       * on model
+       */
+      async onTag(val) {
+        // get value
+        if (!val) val = this.refs.tag.val();
+      
+        // set model
+        this.props.data('tag', val);
+      }
+
+      /**
+       * on model
+       */
+      async onUser(val) {
+        // check value
+        if (!val) val = this.refs.user.val();
+        
+        // set model
+        this.props.data('user', val);
       }
 
       /**
@@ -60,85 +121,64 @@
        */
       onFilter(val) {
         // set model
-        this.props.onData('filter', JSON.stringify(val));
+        this.props.data('filter', JSON.stringify(val));
       }
 
-      /**
-       * on model
-       */
-      onForms() {
-        // get value
-        const forms = this.refs.forms.val();
 
-        // model
-        if (!forms || !forms.length) return;
-
-        // set module
-        const mods = forms.map((form) => {
-          // return form
-          return this.props.dashup.page(form);
-        });
-        
-        // set model
-        this.props.onData('forms', mods.map((mod) => {
-          // return forms
-          return {
-            id   : mod.get('_id'),
-            name : mod.get('name'),
-          };
-        }));
-
-        // init
-        this.init();
-      }
-
-      /**
-       * on model
-       */
-      async onTag() {
-        // get value
-        const field = this.refs.tag.val();
-
-        // model
-        if (!field || !field.length) return;
-
-        // get field
-        const result = await (await fetch(`/app/${props.dashup.get('_id')}/form/${this.props.page.get('data.forms').map((f) => f.id).join('-')}/fields/${field}`)).json();
-        
-        // set model
-        this.props.onData('tag', result.data);
-      }
-
-      /**
-       * on model
-       */
-      async onUser() {
-        // get value
-        const field = this.refs.user.val();
-
-        // model
-        if (!field || !field.length) return;
-
-        // get field
-        const result = await (await fetch(`/app/${props.dashup.get('_id')}/form/${this.props.page.get('data.forms').map((f) => f.id).join('-')}/fields/${field}`)).json();
-        
-        // set model
-        this.props.onData('user', result.data);
-      }
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // GET METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
 
       /**
        * get value
        */
       getForms() {
         // return value
-        return (this.props.page.get('data.forms') || []).map((form) => {
-          // return form value
+        return Array.from(this.props.dashup.get('pages').values()).filter((page) => {
+          // return model pages
+          return page.get('type') === 'form' && page.get('data.model') === this.props.page.get('_id');
+        }).map((page) => {
+          // return type
           return {
-            name     : form.name,
-            value    : form.id,
-            selected : true
+            name     : page.get('name'),
+            value    : page.get('_id'),
+            selected : !this.props.page.get('data.forms.0') || (this.props.page.get('data.forms') || []).includes(page.get('_id')),
           };
         });
+      }
+
+      /**
+       * get fields
+       */
+      getFields() {
+        // reduce
+        return (this.props.page.get('data.forms') || []).reduce((accum, form) => {
+          // check form
+          if (!form) return accum;
+
+          // get form
+          const actualForm = this.props.dashup.page(form);
+
+          // check fields
+          if (!actualForm || !actualForm.get('data.fields')) return [];
+
+          // return data
+          accum.push(...(actualForm.get('data.fields').map((field) => {
+            // clone field
+            const newField = { ...field };
+
+            // set form
+            newField.form = form;
+
+            // new field
+            return newField;
+          })));
+
+          // return accum
+          return accum;
+        }, []);
       }
 
       /**
@@ -146,7 +186,14 @@
        */
       getTag() {
         // return value
-        return this.props.page.get('data.tag') ? [{ name : this.props.page.get('data.tag.label'), value : (this.props.page.get('data.tag.name') || this.props.page.get('data.tag.uuid')), selected : true }] : [];
+        return this.getFields().map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : this.props.page.get('data.tag') === field.uuid,
+          };
+        });
       }
 
       /**
@@ -154,51 +201,51 @@
        */
       getUser() {
         // return value
-        return this.props.page.get('data.user') ? [{ name : this.props.page.get('data.user.label'), value : (this.props.page.get('data.user.name') || this.props.page.get('data.user.uuid')), selected : true }] : [];
+        return this.getFields().map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : this.props.page.get('data.user') === field.uuid,
+          };
+        });
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // MISC METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * ref
+       */
+      ref(name) {
+        // set refs
+        if (!this.refs) this.refs = {};
+
+        // return ref function
+        return (that) => {
+          // set ref
+          this.refs[name] = that;
+        };
       }
 
       /**
-       * get group url
+       * set loading
        */
-      getGroupUrl() {
-        // return
-        return this.props.page.get('data.forms').map((f) => f.id).join('-');
-      }
+      loading(type, way) {
+        // set loading
+        if (!this.__loading) this.__loading = new Map();
 
-      /**
-       * on settings
-       *
-       * @param {Event} e
-       */
-      show() {
-        // show modal
-        this.refs.config.show();
-      }
+        // check loading
+        if (!type) return !!Array.from(this.__loading.values()).find((v) => v);
+        if (typeof way === 'undefined') return !!this.__loading.get(type);
 
-      /**
-       * on settings
-       *
-       * @param {Event} e
-       */
-      hide() {
-        // show modal
-        this.refs.config.hide();
-      }
-
-      /**
-       *
-       */
-      async init () {
-        // check page
-        if (this.props.page.get('data.forms.0.id')) {
-          // load fields
-          const fields = await eden.router.get(`/app/${this.props.dashup.get('_id')}/form/${this.getGroupUrl()}/fields`);
-
-          // update
-          this.update({
-            fields,
-          });
-        }
+        // set loading
+        this.__loading.set(type, way);
+        this.update();
       }
     }
   </script>

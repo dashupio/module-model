@@ -1,10 +1,10 @@
 // import action
-import { Action } from '@dashup/module';
+import { Struct } from '@dashup/module';
 
 /**
  * create dashup action
  */
-export default class ModelAction extends Action {
+export default class ModelAction extends Struct {
 
   /**
    * returns action type
