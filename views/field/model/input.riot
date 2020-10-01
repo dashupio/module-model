@@ -1,0 +1,89 @@
+<field-model-input>
+  <div class={ props.field.group || 'mb-3' }>
+    <label class="form-label" for={ props.getId(props.field.uuid) }>
+      { props.field.label }
+      <a href="#!" if={ !props.field.label } onclick={ (e) => props.updateAction(e, props.field) }>
+        <i>Set Label</i>
+      </a>
+    </label>
+    <input class="form-control" if={ !props.field.model || !props.field.by || !props.field.form } readonly value="Please Complete Configuration" />
+    <eden-select if={ props.field.model && props.field.by && props.field.form && !loading('filter') } ref={ ref('select') } multiple={ props.field.multiple } body={ getBody() } type="POST" url={ `/app/models/${props.field.model.id}/search/${props.field.form.id}/${props.field.by.name}` } placeholder={ props.field.label || 'Set Label' } data={ getData() } name={ props.getName(props.field.uuid) } on-change={ (e) => onChange(e) } />
+  </div>
+  
+  <script>
+    // export default
+    export default class FieldModelInput {
+      /**
+       * on before mount
+       */
+      onBeforeMount() {
+        // on change
+        this.onChange = this.onChange.bind(this);
+    
+        // set initial value
+        this.value = this.props.value || [];
+      }
+
+      /**
+      * on change
+      *
+      * @param {Event} e
+      */
+      onChange(e) {
+        // set value
+        this.value = this.val();
+
+        // fix value
+        if (!this.value) this.value = [];
+        if (!Array.isArray(this.value)) this.value = [this.value];
+
+        // check form
+        if (this.props.form) {
+          // update
+          this.props.form.set(`data.${this.props.field.uuid}`, this.value.map((val) => {
+            // return item
+            return (((this.refs.select || {}).data || []).find((d) => d.data._id === val) || {}).data;
+          }));
+          this.props.onUpdate();
+        }
+      }
+
+      /**
+      * return value
+      *
+      * @return {*}
+      */
+      val() {
+        // ref select
+        return this.refs.select.val();
+      }
+
+      /**
+       * get value
+       */
+      getData() {
+        // return value
+        return this.value ? this.value.map((item) => {
+          // return value
+          return {
+            name     : item[this.props.field.by.name || this.props.field.by.uuid],
+            data     : item,
+            value    : item._id,
+            selected : true,
+          };
+        }) : [];
+      }
+
+      /**
+       * get body
+       */
+      getBody() {
+        // return body
+        return {
+          filter : this.props.field.filter ? JSON.parse(this.props.field.filter) : []
+        };
+      }
+    }
+    
+  </script>
+</field-model-input>

@@ -1,0 +1,175 @@
+<field-model-config>
+  <div>
+    <div class="mb-3">
+      <label class="form-label">
+        Dashup Model
+      </label>
+      <eden-select on-change={ (e, model) => onModel(model) } ref={ ref('model') } url={ `/app/${props.dashup.get('_id')}/model/list` } placeholder="Select Model" data={ getModel() } />
+    </div>
+    <div if={ props.field.model } class="mb-3">
+      <label class="form-label">
+        Dashup Model Form
+      </label>
+      <eden-select on-change={ (e, value) => onForm(value) } ref={ ref('form') } url={ `/app/${props.dashup.get('_id')}/form/${props.field.model.id}/list` } placeholder="Select Form" data={ getForm() } />
+    </div>
+    <div if={ props.field.form } class="mb-3">
+      <label class="form-label">
+        Model Title
+      </label>
+      <eden-select on-change={ (e, value) => onField(value) } ref={ ref('title') } url={ `/app/${props.dashup.get('_id')}/form/${props.field.form.id}/fields` } placeholder="Identifier Field" data={ getField() } />
+    </div>
+    <dashup-query on-change={ (v) => onFilter(v) } data-value={ props.field.filter ? JSON.parse(props.field.filter) : [] } fields={ getFields() } label="Filter By" />
+  </div>
+
+  <script>
+
+    // export default
+    export default class FieldModelField {
+      /**
+       * on before mount
+       */
+      onBeforeMount() {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // load
+        this.loadFields();
+      }
+
+      /**
+       * load fields
+       */
+      async loadFields() {
+        // check form exists
+        if (!this.props.field.form) return;
+
+        // load fields from form
+        this.update({
+          fields : await eden.router.get(`/app/${props.dashup.get('_id')}/form/${this.props.field.form.id}/fields`),
+        });
+      }
+
+      /**
+       * on model
+       */
+      async onModel(model) {
+        // get value
+        if (!model) model = this.refs.model.val();
+
+        // model
+        if (!model || !model.length) return;
+
+        // get model
+        const mod = this.props.dashup.page(model);
+
+        // set model
+        this.props.set('model', {
+          id   : mod.get('_id'),
+          name : mod.get('name'),
+        });
+      }
+
+      /**
+       * on model
+       */
+      async onForm(form) {
+        // get value
+        if (!form) form = this.refs.form.val();
+
+        // model
+        if (!form || !form.length) return;
+
+        // get model
+        const mod = this.props.dashup.page(form);
+
+        // set model
+        await this.props.set('form', {
+          id   : form,
+          name : mod.get('name'),
+        });
+
+        // save
+        this.loadFields();
+      }
+
+      /**
+       * on model
+       */
+      async onField(id) {
+        // get value
+        if (!id) id = this.refs.title.val();
+
+        // model
+        if (!id || !id.length) return;
+
+        // get field
+        const field = await (await fetch(`/app/${props.dashup.get('_id')}/form/${this.props.field.form.id}/fields/${id}`)).json();
+
+        // set model
+        this.props.set('by', field.data);
+      }
+
+      /**
+       * on model
+       */
+      async onFilter(filter) {
+        // loading filter
+        this.loading('filter', true);
+
+        // set model
+        await this.props.set('filter', JSON.stringify(filter));
+
+        // loading filter
+        this.loading('filter', false);
+      }
+
+      /**
+       * get value
+       */
+      getData() {
+        // return value
+        return this.value ? this.value.map((item) => {
+          // return value
+          return {
+            name     : item[this.props.field.by.name || this.props.field.by.uuid],
+            data     : item,
+            value    : item._id,
+            selected : true,
+          };
+        }) : [];
+      }
+
+      /**
+       * get value
+       */
+      getModel() {
+        // return value
+        return this.get('field.model') ? [{ name : this.get('field.model.name'), value : this.get('field.model.id'), selected : true }] : [];
+      }
+
+      /**
+       * get value
+       */
+      getForm() {
+        // return value
+        return this.get('field.form') ? [{ name : this.get('field.form.name'), value : this.get('field.form.id'), selected : true }] : [];
+      }
+
+      /**
+       * get value
+       */
+      getField() {
+        // return value
+        return this.get('field.by') ? [{ name : this.get('field.by.label'), value : this.get('field.by.name'), selected : true }] : [];
+      }
+
+      /**
+       * get fields
+       */
+      getFields() {
+        // return fields
+        return this.state.fields || [];
+      }
+    }
+  </script>
+</field-model-config>

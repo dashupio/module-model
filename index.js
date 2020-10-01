@@ -4,6 +4,9 @@ const { Module } = require('@dashup/module');
 // import base
 const ModelPage = require('./pages/model');
 
+// import fields
+const ModelField = require('./fields/model');
+
 /**
  * export module
  */
@@ -48,6 +51,7 @@ class ModelModule extends Module {
    */
   actions(register) {
     // register sms action
+    register(ModelField);
   }
 }
 
