@@ -1,11 +1,11 @@
 <trigger-model-config>
   <span>
-    <eden-select class="d-inline-block w-auto mx-1" ref="model" on-change={ (e, val) => onChangeModel(val) } placeholder="Select Model" data={ getModel() } />
-    <eden-select class="d-inline-block w-auto mx-1" ref="when" on-change={ (e, val) => onChangeWhen(e, val) } multiple={ true } placeholder="Select When" data={ getWhen() } />
+    <eden-select class="d-inline-block w-auto mx-1" ref="model" on-change={ (e, val) => onModel(val) } placeholder="Select Model" data={ getModel() } />
+    <eden-select class="d-inline-block w-auto mx-1" ref="when" on-change={ (e, val) => onWhen(val) } multiple={ true } placeholder="Select When" data={ getWhen() } />
     <span>
       It's
     </span>
-    <eden-select class="d-inline-block w-auto mx-1" ref="event" on-change={ (e, val) => onChangeEvent(val) } multiple={ true } placeholder="Select Event(s)" data={ getEvent() } />
+    <eden-select class="d-inline-block w-auto mx-1" ref="event" on-change={ (e, val) => onEvent(val) } multiple={ true } placeholder="Select Event(s)" data={ getEvent() } />
   </span>
 
   <script>
@@ -21,9 +21,9 @@
         this.init = this.init.bind(this);
 
         // bind methods
-        this.onChangeWhen  = this.onChangeWhen.bind(this);
-        this.onChangeModel = this.onChangeModel.bind(this);
-        this.onChangeEvent = this.onChangeEvent.bind(this);
+        this.onWhen  = this.onWhen.bind(this);
+        this.onModel = this.onModel.bind(this);
+        this.onEvent = this.onEvent.bind(this);
 
         // bind
         this.getWhen  = this.getWhen.bind(this);
@@ -45,12 +45,12 @@
       /**
        * init
        */
-      async init () {
+      init () {
         // check model
-        if (!this.props.page.get('data.model.id')) return;
+        if (!this.props.page.get('data.model')) return;
         
         // run set
-        this.props.props('fields', await eden.router.get(`/app/${eden.get('dashup').get('_id')}/form/${this.props.page.get('data.model.id')}/fields`));
+        // if (!this.props.modelFields) this.props.props('modelFields', this.getFields());
       }
 
       /**
@@ -58,7 +58,7 @@
        *
        * @param {Event} e
        */
-      onChangeWhen(val) {
+      onWhen(val) {
         // check ref
         if (!val) val = $('select', this.$('[ref="when"]')).val();
 
@@ -69,21 +69,12 @@
       /**
        * on model
        */
-      onChangeModel(model) {
-        // get value
-        if (!model) model = $('select', this.$('[ref="model"]')).val();
-
-        // model
-        if (!model || !model.length) return;
-
-        // mod
-        const mod = this.eden.get('dashup').page(model);
+      onModel(val) {
+        // check ref
+        if (!val) val = $('select', this.$('[ref="model"]')).val();
         
         // set model
-        this.props.set('model', {
-          id   : mod.get('_id'),
-          name : mod.get('name'),
-        });
+        this.props.set('model', val);
       }
 
       /**
@@ -91,12 +82,47 @@
        *
        * @param {Event} e
        */
-      onChangeEvent(val) {
+      onEvent(val) {
         // get value
         if (!val) val = $('select', this.$('[ref="event"]')).val();
 
         // set when
         this.props.set('event', val);
+      }
+
+      /**
+       * get fields
+       */
+      getFields() {
+        // get forms
+        const forms = Array.from(this.props.dashup.get('pages').values()).filter((page) => {
+          // get model
+          return page.get('type') === 'form' && page.get('data.model') === this.props.page.get('data.model');
+        });
+
+        // reduce
+        return forms.reduce((accum, actualForm) => {
+          // check form
+          if (!actualForm) return accum;
+
+          // check fields
+          if (!actualForm || !actualForm.get('data.fields')) return [];
+
+          // return data
+          accum.push(...(actualForm.get('data.fields').map((field) => {
+            // clone field
+            const newField = { ...field };
+
+            // set form
+            newField.form = actualForm.get('_id');
+
+            // new field
+            return newField;
+          })));
+
+          // return accum
+          return accum;
+        }, []);
       }
 
       /**
@@ -139,7 +165,7 @@
           return {
             name     : page.get('name'),
             value    : page.get('_id'),
-            selected : page.get('_id') === this.props.page.get('data.model.id'),
+            selected : page.get('_id') === this.props.page.get('data.model'),
           }
         });
       }
