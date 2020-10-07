@@ -96,19 +96,22 @@ export default class ModelField extends Struct {
    */
   async submit({ req, old }, field, value) {
     // check value
+    if (!value) value = [];
     if (!Array.isArray(value)) value = [value];
 
     // return value map
-    return await Promise.all((value || []).filter(val => val).map(async (val, i) => {
-      // run try catch
-      try {
-        // check mod
-        return val;
-      } catch (e) {
-        // return old
-        return old[i];
-      }
-    }));
+    return {
+      value : await Promise.all(value.filter(val => val).map(async (val, i) => {
+        // run try catch
+        try {
+          // check mod
+          return val._id || val.id || val;
+        } catch (e) {
+          // return old
+          return old[i];
+        }
+      })),
+    };
   }
 
   /**
