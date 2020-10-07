@@ -1,21 +1,47 @@
 
 // import field interface
-import { Struct } from '@dashup/module';
+import { Struct, Query } from '@dashup/module';
 
 /**
  * build address helper
  */
 export default class ModelField extends Struct {
+
+  /**
+   * construct model field
+   *
+   * @param args 
+   */
+  constructor(...args) {
+    // run super
+    super(...args);
+
+    // save
+    this.submit   = this.submit.bind(this);
+    this.sanitise = this.sanitise.bind(this);
+  }
+
   /**
    * returns object of views
    */
   get views() {
     // return object of views
     return {
+      view     : 'field/model/view',
       input    : 'field/model/input',
       config   : 'field/model/config',
       display  : 'field/model/display',
       validate : 'field/model/validate',
+    };
+  }
+  /**
+   * returns object of views
+   */
+  get actions() {
+    // return object of views
+    return {
+      submit   : this.submit,
+      sanitise : this.sanitise,
     };
   }
 
@@ -76,17 +102,8 @@ export default class ModelField extends Struct {
     return await Promise.all((value || []).filter(val => val).map(async (val, i) => {
       // run try catch
       try {
-        // buffer mod
-        const mod = await Model.findById(val);
-
         // check mod
-        if (mod) return {
-          id    : mod.get('_id'),
-          model : 'dashupmodel',
-        };
-
-        // return null
-        return null;
+        return val;
       } catch (e) {
         // return old
         return old[i];
@@ -101,20 +118,25 @@ export default class ModelField extends Struct {
    * @param {*} field 
    * @param {*} value 
    */
-  async sanitise({ req, form, noChild }, field, value) {
+  async sanitise(opts, field, value) {
     // check noChild
-    if (noChild) return value;
+    if (opts.noChild) return value;
 
-    // return
-    return value ? (Array.isArray(value) ? (await Promise.all(value.map(async (item) => {
-      // check item
-      if (!(item instanceof Model) && item.id && item.model) {
-        // set item
-        item = await Model.findById(item.id);
-      }
+    // get value
+    if (!value) value = [];
+    if (!Array.isArray(value)) value = [value];
 
-      // return sanitised
-      return item && item.sanitise ? await item.sanitise({ req }) : null;
-    }))).filter((item) => item) : (value.sanitise ? await value.sanitise({ req }) : null)) : null;
+    // query model
+    const values = await new Query({
+      ...opts,
+
+      form : (field.form || {}).id || field.form,
+      page : (field.model || {}).id || field.model,
+    }, this.dashup, 'model').findByIds(value.map((v) => v.id || v));
+
+    // map values
+    return {
+      sanitised : values.map((val) => val && val.get()).filter((v) => v)
+    };
   }
 }

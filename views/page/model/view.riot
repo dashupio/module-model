@@ -9,7 +9,7 @@
       <i class="fa fa-spin fa-spinner h1" />
     </div>
     <div if={ !loading('grid') && props.page.get('data.forms.0') } class="dashup-grid">
-      <dashup-view view="grid" type="page" struct="grid" model={ props.page.get('_id') } groups={ getGroups() } fields={ getFields() } { ...getProps() } />
+      <dashup-view view="grid" type="page" struct="grid" model={ props.page.get('_id') } groups={ getGroups() } fields={ getFields() } get-field={ getField } { ...getProps() } />
     </div>
   </div>
 
@@ -29,6 +29,9 @@
           this.update();
         };
 
+        // bind methods
+        this.getField = this.getField.bind(this);
+
         // listeners
         this.props.page.on('reload', this.safeUpdate);
         this.props.page.on('data.forms', this.safeUpdate);
@@ -44,6 +47,14 @@
         // listeners
         this.props.page.removeListener('reload', this.safeUpdate);
         this.props.page.removeListener('data.forms', this.safeUpdate);
+      }
+
+      /**
+       * get field
+       */
+      getField({ type }) {
+        // return field
+        return this.props.fields.find((f) => f.type === type);
       }
 
       /**
@@ -107,6 +118,7 @@
         delete newProps.view;
         delete newProps.class;
         delete newProps.struct;
+        delete newProps.fields;
 
         // return
         return newProps;

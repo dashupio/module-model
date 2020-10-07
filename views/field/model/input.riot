@@ -7,7 +7,7 @@
       </a>
     </label>
     <input class="form-control" if={ !props.field.model || !props.field.by || !props.field.form } readonly value="Please Complete Configuration" />
-    <eden-select if={ props.field.model && props.field.by && props.field.form && !loading('filter') } ref={ ref('select') } multiple={ props.field.multiple } body={ getBody() } type="POST" url={ `/app/models/${props.field.model.id}/search/${props.field.form.id}/${props.field.by.name}` } placeholder={ props.field.label || 'Set Label' } data={ getData() } name={ props.getName(props.field.uuid) } on-change={ (e) => onChange(e) } />
+    <eden-select if={ props.field.model && props.field.by && props.field.form } ref={ ref('select') } multiple={ props.field.multiple } load={ loadData } placeholder={ props.field.label || 'Set Label' } data={ getData() } name={ props.getName(props.field.uuid) } on-change={ (e) => onChange(e) } />
   </div>
   
   <script>
@@ -19,6 +19,7 @@
       onBeforeMount() {
         // on change
         this.onChange = this.onChange.bind(this);
+        this.loadData = this.loadData.bind(this);
     
         // set initial value
         this.value = this.props.value || [];
@@ -59,6 +60,45 @@
       }
 
       /**
+       * load from api
+       */
+      async loadData(search) {
+        // get model
+        const model = this.props.dashup.page((this.props.field.model || {}).id || this.props.field.model);
+
+        // check query
+        const query = this.props.field.filter ? JSON.parse(this.props.field.filter) : [];
+
+        // create where
+        let data = model;
+
+        // loop query
+        query.forEach((item) => {
+          // add where
+          data = data.where(item);
+        });
+
+        // inc
+        if (search && search.length) {
+          // inc
+          data = data.inc(this.props.field.by.name || this.props.field.by.uuid, search);
+        }
+
+        // add limit
+        const result = await data.limit(25).find();
+
+        // return map
+        return result.map((item) => {
+          // return value
+          return {
+            name  : item.get(this.props.field.by.name || this.props.field.by.uuid),
+            data  : item,
+            value : item.get('_id'),
+          };
+        });
+      }
+
+      /**
        * get value
        */
       getData() {
@@ -66,21 +106,25 @@
         return this.value ? this.value.map((item) => {
           // return value
           return {
-            name     : item[this.props.field.by.name || this.props.field.by.uuid],
+            name     : item.get ? item.get(this.props.field.by.name || this.props.field.by.uuid) : item[this.props.field.by.name || this.props.field.by.uuid],
             data     : item,
-            value    : item._id,
+            value    : item.get ? item.get('_id') : item._id,
             selected : true,
           };
         }) : [];
       }
 
       /**
-       * get body
+       * ref
        */
-      getBody() {
-        // return body
-        return {
-          filter : this.props.field.filter ? JSON.parse(this.props.field.filter) : []
+      ref(name) {
+        // set refs
+        if (!this.refs) this.refs = {};
+
+        // return ref function
+        return (that) => {
+          // set ref
+          this.refs[name] = that;
         };
       }
     }

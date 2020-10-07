@@ -48,6 +48,7 @@ export default class ModelPage extends Struct {
       view   : 'page/model/view',
       menu   : 'page/model/menu',
       config : 'page/model/config',
+      filter : 'page/model/filter',
     };
   }
 

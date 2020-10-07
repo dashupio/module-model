@@ -1,0 +1,36 @@
+<field-model-view>
+  <div class="tags">
+    <a each={ (model, i) in getValues(props) } href={ `/app/${model.form}/${model.id}` } class="btn btn-sm btn-info mr-2">
+      { model.name }
+    </a>
+  </div>
+
+  <script>
+		// export default
+    export default {
+      components : {
+      },
+
+      getValues(props) {
+        // check value
+        let value = props.value || [];
+
+        // check array
+        if (!Array.isArray(value)) value = [value];
+
+        // return joined
+        return value.map((item) => {
+          // check item
+          if (item && item.get) return {
+            id   : item.get('_id'),
+            form : item.get('_meta.form'),
+            name : item.get((props.field.by || {}).name || (props.field.by || {}).uuid || 'null') || 'N/A',
+          };
+
+          // return nothing
+          return null;
+        }).filter((v) => v);
+      },
+    }
+  </script>
+</field-model-view>
