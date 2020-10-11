@@ -38,14 +38,12 @@
         if (!this.value) this.value = [];
         if (!Array.isArray(this.value)) this.value = [this.value];
 
+        console.log(this.value);
+
         // check form
         if (this.props.form) {
           // update
-          this.props.form.set(`data.${this.props.field.uuid}`, this.value.map((val) => {
-            // return item
-            return (((this.refs.select || {}).data || []).find((d) => d.data._id === val) || {}).data;
-          }));
-          this.props.onUpdate();
+          this.props.dataAction(this.props.field, this.value);
         }
       }
 
@@ -56,7 +54,7 @@
       */
       val() {
         // ref select
-        return this.refs.select.val();
+        return this.refs.select.val('data');
       }
 
       /**
@@ -85,10 +83,10 @@
         }
 
         // add limit
-        const result = await data.limit(25).find();
+        this.result = await data.limit(25).find();
 
         // return map
-        return result.map((item) => {
+        return this.result.map((item) => {
           // return value
           return {
             name  : item.get(this.props.field.by.name || this.props.field.by.uuid),

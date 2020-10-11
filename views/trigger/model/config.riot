@@ -49,8 +49,7 @@
         // check model
         if (!this.props.page.get('data.model')) return;
         
-        // run set
-        // if (!this.props.modelFields) this.props.props('modelFields', this.getFields());
+        
       }
 
       /**
@@ -88,41 +87,6 @@
 
         // set when
         this.props.set('event', val);
-      }
-
-      /**
-       * get fields
-       */
-      getFields() {
-        // get forms
-        const forms = Array.from(this.props.dashup.get('pages').values()).filter((page) => {
-          // get model
-          return page.get('type') === 'form' && page.get('data.model') === this.props.page.get('data.model');
-        });
-
-        // reduce
-        return forms.reduce((accum, actualForm) => {
-          // check form
-          if (!actualForm) return accum;
-
-          // check fields
-          if (!actualForm || !actualForm.get('data.fields')) return [];
-
-          // return data
-          accum.push(...(actualForm.get('data.fields').map((field) => {
-            // clone field
-            const newField = { ...field };
-
-            // set form
-            newField.form = actualForm.get('_id');
-
-            // new field
-            return newField;
-          })));
-
-          // return accum
-          return accum;
-        }, []);
       }
 
       /**

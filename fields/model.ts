@@ -133,13 +133,14 @@ export default class ModelField extends Struct {
     const values = await new Query({
       ...opts,
 
-      form : (field.form || {}).id || field.form,
-      page : (field.model || {}).id || field.model,
+      form  : (field.form || {}).id || field.form,
+      page  : (field.model || {}).id || field.model,
+      nonce : opts.nonce,
     }, this.dashup, 'model').findByIds(value.map((v) => v.id || v));
 
     // map values
     return {
-      sanitised : values.map((val) => val && val.get()).filter((v) => v)
+      sanitised : (values || []).map((val) => val && val.get()).filter((v) => v)
     };
   }
 }
