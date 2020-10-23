@@ -15,6 +15,16 @@
         
       <div class="mb-3">
         <label class="form-label">
+          Group Field
+        </label>
+        <eden-select on-change={ (e, val) => onGroup(val) } ref={ ref('group') } placeholder="Select Group Field" data={ getGroup() } />
+        <small>
+          Selecting a tag field will group the grid by this field.
+        </small>
+      </div>
+        
+      <div class="mb-3">
+        <label class="form-label">
           Tag Field
         </label>
         <eden-select on-change={ (e, val) => onTag(val) } ref={ ref('tag') } placeholder="Select Tag Field" data={ getTag() } />
@@ -110,6 +120,17 @@
       /**
        * on model
        */
+      onGroup(val) {
+        // get value
+        if (!val) val = this.refs.group.val();
+      
+        // set model
+        this.props.data('group', val);
+      }
+
+      /**
+       * on model
+       */
       onFilter(val) {
         // set model
         this.props.data('filter', JSON.stringify(val));
@@ -166,6 +187,21 @@
             name     : field.label || field.name,
             value    : field.uuid,
             selected : this.props.page.get('data.user') === field.uuid,
+          };
+        });
+      }
+
+      /**
+       * get field
+       */
+      getGroup() {
+        // return value
+        return [...(this.props.context.fields)].filter((field) => ['select', 'checkbox'].includes(field.type)).map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : this.props.page.get('data.group') === field.uuid,
           };
         });
       }
