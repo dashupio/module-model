@@ -18,6 +18,7 @@
     "@dashup/module": "file:../../../modules/dashup_module",
     "babel-plugin-add-module-exports": "^1.0.4",
     "dot-prop": "^5.3.0",
+    "handlebars": "^4.7.6",
     "query": "github:protobi/query"
   }
 }

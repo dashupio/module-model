@@ -1,10 +1,22 @@
 // import action
-import { Struct } from '@dashup/module';
+import handlebars from 'handlebars';
+import { Struct, Model, Query } from '@dashup/module';
 
 /**
  * create dashup action
  */
 export default class ModelAction extends Struct {
+
+  /**
+   * construct
+   */
+  constructor(...args) {
+    // return
+    super(...args);
+
+    // run listen
+    this.runAction = this.runAction.bind(this);
+  }
 
   /**
    * returns action type
@@ -41,6 +53,16 @@ export default class ModelAction extends Struct {
   }
 
   /**
+   * returns object of views
+   */
+  get actions() {
+    // return object of views
+    return {
+      run : this.runAction,
+    };
+  }
+
+  /**
    * returns category list to show action in
    */
   get categories() {
@@ -57,102 +79,87 @@ export default class ModelAction extends Struct {
   }
 
   /**
-   * triggered
+   * action method
    *
-   * @param opts 
-   * @param element 
+   * @param param0 
+   * @param action 
    * @param data 
    */
-  async triggered(opts, element, data) {
-    return;
-    // get config
-    const config = element.config || {};
-
-    // get type
-    const modelTypes = ['update', 'updateOne', 'findOrCreate'];
-
+  async runAction(opts, action, data) {
     // check values
-    if (!config.type || !(config.fields || []).length) return true;
+    if (!(action.fields || []).length) return true;
 
-    // models
-    let models = [data.model];
+    // check update
+    if (!action.update) action.update = 'this';
 
-    // check if it's a new model
-    if (modelTypes.includes(config.type || 'this')) {
-      // query for new model
-      let query = Model.where({
-        '_meta.model' : config.model.id,
-      });
+    // let models
+    let models = [];
 
-      // get query
-      const queries = config.query ? JSON.parse(config.query) : [];
+    // check model
+    if (action.update === 'this') {
+      // model
+      models = [new Model(data.model)];
+    } else if (['update', 'updateOne', 'findOrCreate'].includes(action.update)) {
+      // query model
+      let query = new Query({
+        ...opts,
 
-      // loop for each
-      queries.forEach((q) => query = query.where(q));
+        page  : action.model,
+        nonce : opts.nonce,
+      }, 'model');
+
+      // check filter
+      if (action.filter) {
+        // filters
+        const filters = JSON.parse(action.filter);
+
+        // loop
+        filters.forEach((filter) => {
+          // where
+          query = query.where(filter);
+        });
+      }
 
       // find
-      models = await query.find();
+      if (action.update === 'update') {
+        // find
+        models = await query.find();
+      } else {
+        // models
+        const found = await query.findOne();
 
-      // if update one
-      if (['updateOne', 'findOrCreate'].includes(config.type)) {
-        // only first
-        models = models[0] ? [models[0]] : [];
+        // found
+        models = found ? [found] : [];
       }
+
+      // or create
+      if (action.update === 'findOrCreate' && !models.length) {
+        // create model
+        models = [new Model({})];
+      }
+    } else if (['create'].includes(action.update)) {
+      // new model
+      models = [new Model({})];
     }
 
-    // get forms
-    const forms = await Page.where({
-      type            : 'form',
-      archived        : null,
-      '_meta.dashup'  : flow.get('_meta.dashup'),
-      'data.model.id' : (config.type || 'this') === 'this' ? data.model.get('_meta.model') : config.model.id,
-    }).find();
+    // log models
+    models.forEach((model) => {
+      // loop fields
+      action.fields.forEach((field) => {
+        // template
+        const valueTemplate = handlebars.compile(field.value);
 
-    // actual forms
-    const actualForms = await Promise.all(forms.map((form) => formHelper.load(form.get('_id'))));
+        // set field uuid
+        model.set(field.name, valueTemplate(data));
+      });
 
-    // if or create
-    if (['create'].includes(config.type) || (['findOrCreate'].includes(config.type) && !models.length)) {
-      // create new model
-      models = [new Model({
-        _meta : {
-          page   : flow.get('_id'),
-          form   : forms[0].get('_id'),
-          model  : config.model.id,
-          dashup : flow.get('_meta.dashup'),
-        }
-      })];
-    }
+      // save model
+      model.save({
+        ...opts,
 
-    // create faux body
-    const body = {};
-
-    // loop fields
-    (config.fields || []).forEach((field) => {
-      // set to body
-      body[field.name] = tmpl.tmpl(field.value || '', data.sanitised);
+        page  : model.get('_meta.page'),
+        model : action.model || model.get('_meta.model'),
+      })
     });
-
-    // submit all
-    await Promise.all(models.map(async (item) => {
-      // set flow
-      item.set('_meta.flow', hash);
-
-      // await
-      await Promise.all(actualForms.map((form) => {
-        // submit
-        return formHelper.submit({
-          req : {
-            body,
-          }
-        }, form, item);
-      }));
-
-      // save item
-      if ((config.type || 'this') !== 'this' || when !== 'before') await item.save();
-    }));
-
-    // return true
-    return true;
   }
 }

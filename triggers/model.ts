@@ -1,10 +1,21 @@
 // import base
-import { Struct } from '@dashup/module';
+import { Struct, Query } from '@dashup/module';
 
 /**
  * create dashup action
  */
 export default class ModelTrigger extends Struct {
+
+  /**
+   * construct
+   */
+  constructor(...args) {
+    // return
+    super(...args);
+
+    // run listen
+    this.modelEvent = this.modelEvent.bind(this);
+  }
 
   /**
    * returns action type
@@ -41,6 +52,18 @@ export default class ModelTrigger extends Struct {
   }
 
   /**
+   * returns object of views
+   */
+  get events() {
+    // return object of views
+    return {
+      'model.change' : (...args) => this.modelEvent('updated', ...args),
+      'model.remove' : (...args) => this.modelEvent('removed', ...args),
+      'model.create' : (...args) => this.modelEvent('created', ...args),
+    };
+  }
+
+  /**
    * returns category list to show action in
    */
   get categories() {
@@ -57,80 +80,42 @@ export default class ModelTrigger extends Struct {
   }
 
   /**
-   * run trigger
+   * model change
+   *
+   * @param type 
+   * @param id 
    */
-  listen() {
-    // execute function
-    const execute = (model, a, b) => {
-      // check model
-      if (!(model instanceof Model)) return;
+  async modelEvent(type, opts, data) {
+    // query pages where
+    const pages = await new Query(opts, 'page').where({
+      type                 : 'flow',
+      'data.trigger.type'  : 'model',
+      'data.trigger.model' : data._meta.model,
+    }).find();
 
-      // set vars
-      let hook;
-      let type;
+    // check page
+    if (!pages) return;
 
-      // chec vars
-      if (!b) {
-        hook = a.hook;
-        type = a.type;
-      } else {
-        hook = b.hook;
-        type = b.type;
-      }
+    // trigger
+    pages.forEach((page) => {
+      // check type
+      const events = page.get('data.trigger.event') || [];
 
-      // check
-      if (!hook || !type) return;
+      // check when
+      if (!events.includes(type)) return;
 
-      // get model type
-      const modelName = hook.split('.')[0];
-      let updateType = hook.split('.')[1];
+      // emit new message
+      this.dashup.connection.action({
+        ...opts,
 
-      // removed
-      if (updateType === 'update' && model.get('_meta.archived')) {
-        // removed
-        updateType = 'remove';
-      }
-
-      // tense
-      const tense = {
-        create : 'created',
-        update : 'updated',
-        remove : 'removed',
-      };
-
-      // sanitise
-      model.sanitise({}).then((sanitised) => {
-        // create trigger object
-        const data = {
-          opts  : { type : updateType, name : modelName, when : type === 'pre' ? 'before' : 'after' },
-          value : {
-            model,
-            sanitised,
-          },
-          query : query.where({
-            'data.when'     : type === 'pre' ? 'before' : 'after',
-            'data.event'    : tense[updateType],
-            'data.model.id' : model.get('_meta.model'),
-          }),
-        };
-
-        // hash
-        const hash = [
-          type,
-          modelName,
-          updateType,
-          model.get('_id'),
-        ].join('.');
-
-        // run trigger
-        run(data, hash);
+        page   : page.get('_id'),
+        type   : 'page',
+        struct : 'flow',
+      }, 'trigger', {
+        type  : 'model',
+        event : type,
+        model : data,
       });
-    };
-
-    // add hooks
-    this.eden.pre('*.update', execute);
-    this.eden.pre('*.create', execute);
-    this.eden.post('*.update', execute);
-    this.eden.post('*.create', execute);
+    });
   }
 }

@@ -59,7 +59,7 @@ export default class ModelField extends Struct {
   get data() {
     // return field type label
     return {
-      tabs : ['Field', 'Display', 'Validate'],
+      tabs : ['Config', 'Display'],
     };
   }
 
@@ -122,9 +122,6 @@ export default class ModelField extends Struct {
    * @param {*} value 
    */
   async sanitise(opts, field, value) {
-    // check noChild
-    if (opts.noChild) return value;
-
     // get value
     if (!value) value = [];
     if (!Array.isArray(value)) value = [value];
@@ -133,14 +130,13 @@ export default class ModelField extends Struct {
     const values = await new Query({
       ...opts,
 
-      form  : (field.form || {}).id || field.form,
-      page  : (field.model || {}).id || field.model,
-      nonce : opts.nonce,
-    }, this.dashup, 'model').findByIds(value.map((v) => v.id || v));
+      form : (field.form || {}).id || field.form,
+      page : (field.model || {}).id || field.model,
+    }, 'model').findByIds(value.map((v) => v.id || v));
 
     // map values
     return {
-      sanitised : (values || []).map((val) => val && val.get()).filter((v) => v)
+      sanitised : (values || []).map((val) => val && val.sanitise()).filter((v) => v)
     };
   }
 }

@@ -4,7 +4,7 @@
       <label class="form-label">
         Grid Form
       </label>
-      <eden-select onchange={ (e, val) => onForms(val) } ref={ ref('forms') } placeholder="Select Form" data={ getForms() } multiple={ true } />
+      <eden-select on-change={ (e, val) => onForms(val) } ref={ ref('forms') } placeholder="Select Form" data={ getForms() } multiple={ true } />
       <small>
         The forms that this grid will filter by.
       </small>
@@ -75,29 +75,20 @@
       /**
        * on model
        */
-      onForms(val) {
-        // forms
+      onForms(vals) {
+         // forms
         if (!vals) vals = this.refs.forms.val();
         if (!vals) vals = [];
         if (!Array.isArray(vals)) vals = [vals];
 
-        // set module
-        const forms = vals.map((val) => {
-          // return form
-          return this.props.dashup.page(val);
-        });
-        
         // set model
-        this.props.data('forms', forms.map((mod) => {
-          // return forms
-          return mod.get('_id');
-        }));
+        this.props.data('forms', vals);
       }
 
       /**
        * on model
        */
-      async onTag(val) {
+      onTag(val) {
         // get value
         if (!val) val = this.refs.tag.val();
       
@@ -108,7 +99,7 @@
       /**
        * on model
        */
-      async onUser(val) {
+      onUser(val) {
         // check value
         if (!val) val = this.refs.user.val();
         
@@ -144,7 +135,7 @@
           return {
             name     : page.get('name'),
             value    : page.get('_id'),
-            selected : !this.props.page.get('data.forms.0') || (this.props.page.get('data.forms') || []).includes(page.get('_id')),
+            selected : (this.props.page.get('data.forms') || []).includes(page.get('_id')),
           };
         });
       }
@@ -154,7 +145,7 @@
        */
       getTag() {
         // return value
-        return this.props.context.fields.map((field) => {
+        return [...(this.props.context.fields)].filter((field) => ['select', 'checkbox'].includes(field.type)).map((field) => {
           // return fields
           return {
             name     : field.label || field.name,
@@ -169,7 +160,7 @@
        */
       getUser() {
         // return value
-        return this.props.context.fields.map((field) => {
+        return [...(this.props.context.fields)].filter((field) => ['user'].includes(field.type)).map((field) => {
           // return fields
           return {
             name     : field.label || field.name,

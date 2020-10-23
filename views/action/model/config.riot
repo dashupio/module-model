@@ -11,31 +11,31 @@
     <div class="card-body">
       <div class="mb-3">
         <label class="form-label">
-          Update Type
+          Update
         </label>
-        <eden-select data={ getTypes() } ref={ ref('type') } on-change={ (e, v) => onType(v) } />
+        <eden-select data={ getTypes() } ref={ ref('type') } on-change={ (e, v) => onUpdate(v) } />
       </div>
 
-      <div class="mb-3" if={ modelTypes.includes(get('child.config.type') || 'this') }>
+      <div class="mb-3" if={ modelTypes.includes(props.action.update || 'this') }>
         <label class="form-label">
           Model
         </label>
-        <eden-select ref={ ref('model') } on-change={ (e, val) => onModel(val) } url={ `/app/${props.dashup.get('_id')}/model/list` } placeholder="Select Model" data={ getModel() } />
+        <eden-select ref={ ref('model') } on-change={ (e, val) => onModel(val) } placeholder="Select Model" data={ getModel() } />
       </div>
 
-      <div class="mb-3" if={ queryTypes.includes(get('child.config.type') || 'this') }>
+      <div class="mb-3" if={ queryTypes.includes(props.action.update || 'this') }>
         <label class="form-label">
           Where
         </label>
-        <dashup-query fields={ props.fields } on-change={ (v) => onQuery(v) } data-value={ get('child.config.query') ? JSON.parse(get('child.config.query')) : [] } />
+        <dashup-query fields={ props.fields } on-change={ (v) => onQuery(v) } data-value={ props.action.query ? JSON.parse(props.action.query) : [] } />
       </div>
 
       <hr />
 
-      <div class="card mb-3" if={ !loading('model') && get('child.config.fields.0') && getFields().length }>
+      <div if={ props.action.model || props.action.update === 'this' || !props.action.update } class="card mb-3">
         <div class="card-body pb-2">
-          <div each={ (field, i) in get('child.config.fields') } class="d-flex align-items-center mb-2">
-            <eden-select placeholder="Select new Field" data={ getFields(field) } on-change={ (e, value) => onFieldName(value, i) } placeholder="Set Value" class="flex-1 d-inline-block mr-1" />
+          <div each={ (field, i) in props.action.fields } class="d-flex align-items-center mb-2">
+            <eden-select placeholder="Select new Field" data={ getFields(field) } on-change={ (e, value) => onFieldUUID(value, i) } placeholder="Set Value" class="flex-1 d-inline-block mr-1" />
             <input class="form-control flex-1" value={ field.value || '' } onchange={ (e) => onFieldValue(e, i) } />
             <button class="btn btn-danger ml-2" onclick={ (e) => onRemoveField(e, i) }>
               <i class="fa fa-times" />
@@ -44,7 +44,7 @@
         </div>
       </div>
 
-      <button class="btn btn-success" onclick={ (e) => onCreateField(e) }>
+      <button if={ props.action.model || props.action.update === 'this' || !props.action.update } class="btn btn-success" onclick={ (e) => onCreateField(e) }>
         Add Field
       </button>
     </div>
@@ -52,50 +52,19 @@
 
   <script>
     // export default base
-    export default class FlowActionUpdate {
+    export default class ActionModelConfig {
       /**
        * on before mount
        */
       onBeforeMount(...args) {
-        // bind init
-        this.init = this.init.bind(this);
-        
         // set values
         this.modelTypes = ['create', 'update', 'updateOne', 'findOrCreate'];
         this.queryTypes = ['update', 'updateOne', 'findOrCreate'];
-      }
 
-      /**
-       * on before mount
-       */
-      onMounted(...args) {
-        // check frotend
-        if (typeof window === 'undefined') return;
-        
-        // check type
-        if (this.modelTypes.includes(this.get('child.config.type') || 'this')) {
-          // init
-          this.init();
-        }
-      }
-
-      /**
-       * init
-       */
-      async init() {
-        // check model
-        if (!this.get('child.config.model.id')) return;
-
-        // loading model
-        this.loading('model', true);
-
-        // update fields
-        this.update({
-          fields : await eden.router.get(`/app/${this.props.dashup.get('_id')}/form/${this.get('child.config.model.id')}/fields`),
-        });
-
-        // loading model
-        this.loading('model', false);
+        // on type
+        this.onUpdate = this.onUpdate.bind(this);
+        this.onQuery = this.onQuery.bind(this);
+        this.onModel = this.onModel.bind(this);
       }
 
       /**
@@ -103,19 +72,12 @@
        *
        * @param {Event} e
        */
-      async onType(val) {
+      onUpdate(val) {
         // check value
         if (!val) val = this.refs.type.val();
 
-        // config
-        const config = this.get('child.config') || {};
-
-        // set type
-        config.type = val;
-
         // set element
-        await this.props.onChild('config', config);
-        await this.init();
+        this.props.set('update', val);
       }
 
       /**
@@ -124,41 +86,19 @@
        * @param {Event} e
        */
       onQuery(v) {
-        // config
-        const config = this.get('child.config') || {};
-
-        // query
-        config.query = JSON.stringify(v);
-
         // set element
-        this.props.onChild('query', config);
+        this.props.set('query', JSON.stringify(v));
       }
 
       /**
        * on model
        */
-      async onModel(model) {
+      onModel(val) {
         // get value
-        if (!model) model = this.refs.model.val();
-
-        // model
-        if (!model || !model.length) return;
-
-        // config
-        const config = this.get('child.config') || {};
-
-        // mod
-        const mod = this.props.dashup.page(model);
-
-        // set config
-        config.model = {
-          id   : mod.get('_id'),
-          name : mod.get('name'),
-        };
+        if (!val) val = this.refs.model.val();
         
         // set model
-        await this.props.onChild('config', config);
-        await this.init();
+        this.props.set('model', val);
       }
 
       /**
@@ -171,17 +111,14 @@
         e.preventDefault();
         e.stopPropagation();
 
-        // config
-        const config = this.get('child.config') || {};
-
         // create fields
-        if (!config.fields) config.fields = [];
+        if (!this.props.action.fields) this.props.action.fields = [];
 
         // push
-        config.fields.push({});
+        this.props.action.fields.push({});
         
         // set model
-        this.props.onChild('config', config);
+        this.props.set('fields', this.props.action.fields);
       }
 
       /**
@@ -194,42 +131,33 @@
         e.preventDefault();
         e.stopPropagation();
 
-        // config
-        const config = this.get('child.config') || {};
-
         // push
-        config.fields.splice(i, 1);
+        this.props.action.fields.splice(i, 1);
         
         // set model
-        this.props.onChild('config', config);
+        this.props.set('fields', this.props.action.fields);
       }
 
       /**
        * on field name
        */
-      onFieldName(val, i) {
-        // config
-        const config = this.get('child.config') || {};
+      onFieldUUID(val, i) {
+        // create fields
+        this.props.action.fields[i].name = val;
 
-        // set value
-        config.fields[i].name = val;
-        
         // set model
-        this.props.onChild('config', config);
+        this.props.set('fields', this.props.action.fields);
       }
 
       /**
        * on field name
        */
       onFieldValue(e, i) {
-        // config
-        const config = this.get('child.config') || {};
-
-        // set value
-        config.fields[i].value = e.target.value;
+        // create fields
+        this.props.action.fields[i].value = e.target.value;
         
         // set model
-        this.props.onChild('config', config);
+        this.props.set('fields', this.props.action.fields);
       }
 
       /**
@@ -242,7 +170,7 @@
           return {
             name,
             value,
-            selected : (this.get('child.config.type') || 'this') === value,
+            selected : (this.props.action.update || 'this') === value,
           };
         });
       }
@@ -251,34 +179,82 @@
        * get model
        */
       getModel() {
-        // data
-        const model = this.get('child.config.model');
-
-        // model
-        if (model) {
-          // push
-          return [{
-            name     : model.name,
-            value    : model.id,
-            selected : true,
-          }];
-        }
-
-        // return no data
-        return [];
+        // return value
+        return Array.from(this.props.dashup.get('pages').values()).filter((page) => {
+          // return model pages
+          return page.get('type') === 'model';
+        }).map((page) => {
+          // return type
+          return {
+            name     : page.get('name'),
+            value    : page.get('_id'),
+            selected : this.props.action.model === page.get('_id'),
+          };
+        });
       }
 
       /**
        * get fields
        */
-      getFields(field = {}) {
-        // field
-        return ((this.modelTypes.includes(this.get('child.config.type') || 'this') ? this.state.fields : this.props.fields) || []).map((f) => {
+      getFields(actualField) {
+        // model
+        const model = (this.props.action.update || 'this') === 'this' ? this.props.page.get('data.trigger.model') : this.props.action.model;
+
+        // reduce
+        const fields = Array.from(this.props.dashup.get('pages').values()).filter((page) => {
+          // return page
+          return page.get('type') === 'form' && page.get('data.model') === model;
+        }).reduce((accum, page) => {
+          // check page
+          if (!page || !page.get('data.fields')) return accum;
+
+          // loop fields
+          accum.push(...page.get('data.fields'));
+
+          // return accum
+          return accum;
+        }, []);
+
+        // return fields
+        return fields.filter((f) => f).map((field) => {
           // return field
-          return Object.assign({}, f, {
-            selected : field.name === f.value,
-          });
+          return {
+            data     : field,
+            text     : field.label,
+            value    : field.name || field.uuid,
+            selected : actualField.name === (field.name || field.uuid),
+          };
         });
+      }
+
+      /**
+       * ref
+       */
+      ref(name) {
+        // set refs
+        if (!this.refs) this.refs = {};
+
+        // return ref function
+        return (that) => {
+          // set ref
+          this.refs[name] = that;
+        };
+      }
+
+      /**
+       * set loading
+       */
+      loading(type, way) {
+        // set loading
+        if (!this.__loading) this.__loading = new Map();
+
+        // check loading
+        if (!type) return !!Array.from(this.__loading.values()).find((v) => v);
+        if (typeof way === 'undefined') return !!this.__loading.get(type);
+
+        // set loading
+        this.__loading.set(type, way);
+        this.update();
       }
     }
 

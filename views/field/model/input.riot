@@ -38,8 +38,6 @@
         if (!this.value) this.value = [];
         if (!Array.isArray(this.value)) this.value = [this.value];
 
-        console.log(this.value);
-
         // check form
         if (this.props.form) {
           // update
@@ -61,14 +59,29 @@
        * load from api
        */
       async loadData(search) {
+        // by
+        let by = this.props.field.by;
+
+        // model
+        by = by && by.id ? by.id : by;
+        
+        // by
+        let model = this.props.field.model;
+
+        // model
+        model = model && model.id ? model.id : model;
+
         // get model
-        const model = this.props.dashup.page((this.props.field.model || {}).id || this.props.field.model);
+        const modelPage = this.props.dashup.page(model);
+
+        // by field
+        const byField = this.getFields().find((f) => f.uuid === by);
 
         // check query
         const query = this.props.field.filter ? JSON.parse(this.props.field.filter) : [];
 
         // create where
-        let data = model;
+        let data = modelPage;
 
         // loop query
         query.forEach((item) => {
@@ -79,7 +92,7 @@
         // inc
         if (search && search.length) {
           // inc
-          data = data.inc(this.props.field.by.name || this.props.field.by.uuid, search);
+          data = data.inc(byField.name || byField.uuid, search);
         }
 
         // add limit
@@ -89,7 +102,7 @@
         return this.result.map((item) => {
           // return value
           return {
-            name  : item.get(this.props.field.by.name || this.props.field.by.uuid),
+            name  : item.get(byField.name || byField.uuid),
             data  : item,
             value : item.get('_id'),
           };
@@ -100,16 +113,39 @@
        * get value
        */
       getData() {
+        // by
+        let by = this.props.field.by;
+
+        // model
+        by = by && by.id ? by.id : by;
+
+        // by field
+        const byField = this.getFields().find((f) => f.uuid === by);
+        
         // return value
         return this.value ? this.value.map((item) => {
           // return value
           return {
-            name     : item.get ? item.get(this.props.field.by.name || this.props.field.by.uuid) : item[this.props.field.by.name || this.props.field.by.uuid],
+            name     : item.get ? item.get(byField.name || byField.uuid) : item[byField.name || byField.uuid],
             data     : item,
             value    : item.get ? item.get('_id') : item._id,
             selected : true,
           };
         }) : [];
+      }
+
+      /**
+       * get fields
+       */
+      getFields() {
+        // model
+        let form = this.props.field.form;
+
+        // model
+        form = form && form.id ? form.id : form;
+
+        // return fields
+        return (form ? (this.props.dashup.page(form).get('data.fields') || []) : []);
       }
 
       /**

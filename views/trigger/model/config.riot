@@ -1,9 +1,8 @@
 <trigger-model-config>
   <span>
     <eden-select class="d-inline-block w-auto mx-1" ref="model" on-change={ (e, val) => onModel(val) } placeholder="Select Model" data={ getModel() } />
-    <eden-select class="d-inline-block w-auto mx-1" ref="when" on-change={ (e, val) => onWhen(val) } multiple={ true } placeholder="Select When" data={ getWhen() } />
     <span>
-      It's
+      Has been
     </span>
     <eden-select class="d-inline-block w-auto mx-1" ref="event" on-change={ (e, val) => onEvent(val) } multiple={ true } placeholder="Select Event(s)" data={ getEvent() } />
   </span>
@@ -17,52 +16,13 @@
        * on before mount
        */
       onBeforeMount(...args) {
-        // bind init
-        this.init = this.init.bind(this);
-
         // bind methods
-        this.onWhen  = this.onWhen.bind(this);
         this.onModel = this.onModel.bind(this);
         this.onEvent = this.onEvent.bind(this);
 
         // bind
-        this.getWhen  = this.getWhen.bind(this);
         this.getEvent = this.getEvent.bind(this);
         this.getModel = this.getModel.bind(this);
-      }
-
-      /**
-       * on before mount
-       */
-      onMounted(...args) {
-        // check frontend
-        if (typeof window === 'undefined') return;
-
-        // init
-        this.init();
-      }
-
-      /**
-       * init
-       */
-      init () {
-        // check model
-        if (!this.props.page.get('data.model')) return;
-        
-        
-      }
-
-      /**
-       * on change when
-       *
-       * @param {Event} e
-       */
-      onWhen(val) {
-        // check ref
-        if (!val) val = $('select', this.$('[ref="when"]')).val();
-
-        // set when
-        this.props.set('when', val);
       }
 
       /**
@@ -92,21 +52,6 @@
       /**
        * get when
        */
-      getWhen() {
-        // return when
-        return ['Before', 'After'].map((type) => {
-          // return type
-          return {
-            name     : type,
-            value    : type.toLowerCase(),
-            selected : (this.props.page.get('data.when') || []).includes(type.toLowerCase()),
-          };
-        });
-      }
-
-      /**
-       * get when
-       */
       getEvent() {
         // return when
         return ['Created', 'Updated', 'Removed'].map((type) => {
@@ -114,7 +59,7 @@
           return {
             name     : type,
             value    : type.toLowerCase(),
-            selected : (this.props.page.get('data.event') || []).includes(type.toLowerCase()),
+            selected : (this.props.page.get('data.trigger.event') || []).includes(type.toLowerCase()),
           };
         });
       }
@@ -129,7 +74,7 @@
           return {
             name     : page.get('name'),
             value    : page.get('_id'),
-            selected : page.get('_id') === this.props.page.get('data.model'),
+            selected : page.get('_id') === this.props.page.get('data.trigger.model'),
           }
         });
       }
