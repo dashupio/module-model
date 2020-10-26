@@ -77,6 +77,9 @@
         // by field
         const byField = this.getFields().find((f) => f.uuid === by);
 
+        // check by field
+        if (!byField) return [];
+
         // check query
         const query = this.props.field.filter ? JSON.parse(this.props.field.filter) : [];
 
@@ -121,6 +124,9 @@
 
         // by field
         const byField = this.getFields().find((f) => f.uuid === by);
+
+        // return
+        if (!byField) return [];
         
         // return value
         return this.value ? this.value.map((item) => {
