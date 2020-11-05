@@ -57,7 +57,7 @@ export default class ModelPage extends Struct {
    */
   get categories() {
     // return array of categories
-    return ['frontend'];
+    return ['Model'];
   }
 
   /**
@@ -65,6 +65,6 @@ export default class ModelPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Page Descripton';
+    return 'Model create page';
   }
 }
