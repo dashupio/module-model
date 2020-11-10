@@ -6,13 +6,13 @@
       </label>
       <eden-select on-change={ (e, model) => onModel(model) } ref={ ref('model') } placeholder="Select Model" data={ getModel() } />
     </div>
-    <div if={ props.field.model } class="mb-3">
+    <div if={ !loading('model') && props.field.model } class="mb-3">
       <label class="form-label">
         Model Form
       </label>
       <eden-select on-change={ (e, value) => onForm(value) } ref={ ref('form') } placeholder="Select Form" data={ getForm() } />
     </div>
-    <div if={ props.field.form } class="mb-3">
+    <div if={ !loading('model') && !loading('form') && props.field.form } class="mb-3">
       <label class="form-label">
         Model Title
       </label>
@@ -29,29 +29,57 @@
       /**
        * on model
        */
-      onModel(val) {
+      async onModel(val) {
         // get value
         if (!val) val = this.refs.model.val();
 
         // model
         if (!val || !val.length) return;
 
+        // loading model
+        this.loading('model', true);
+
+        // set form null
+        if (val !== this.props.field.model && this.props.field.form) {
+          // unset form
+          await this.props.set({
+            by : null,
+            form : null,
+            filter : null,
+          });
+        }
+
         // set model
-        this.props.set('model', val);
+        await this.props.set('model', val);
+
+        // loading model
+        this.loading('model', false);
+
+        // update
+        this.update();
       }
 
       /**
        * on model
        */
-      onForm(val) {
+      async onForm(val) {
         // get value
         if (!val) val = this.refs.form.val();
 
         // model
         if (!val || !val.length) return;
 
+        // loading model
+        this.loading('form', true);
+
         // set model
-        this.props.set('form', val);
+        await this.props.set('form', val);
+
+        // loading model
+        this.loading('form', false);
+
+        // update
+        this.update();
       }
 
       /**
