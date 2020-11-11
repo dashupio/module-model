@@ -6,6 +6,15 @@
     export default class PageModelFilter {
 
       /**
+       * on before mount
+       */
+      onBeforeMount() {
+        // tags and props
+        this.getTags = this.getTags.bind(this);
+        this.getProps = this.getProps.bind(this);
+      }
+
+      /**
        * get props
        */
       getProps() {

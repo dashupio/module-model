@@ -51,6 +51,10 @@
       onBeforeMount() {
         // get fields
         this.limits = [20, 40, 60, 80, 100];
+
+        // get export
+        this.getExport = this.getExport.bind(this);
+        this.getExports = this.getExports.bind(this);
       }
       
       /**
@@ -82,7 +86,7 @@
        */
       getExports() {
         // export
-        return [...(this.props.page.get('connects') || [])].map(this.getExport).filter((c) => (c.data || {}).export);
+        return [...(this.props.page.get('connects') || [])].map((e) => this.getExport(e)).filter((c) => c && (c.data || {}).export);
       }
     }
   </script>

@@ -45,10 +45,11 @@ export default class ModelPage extends Struct {
   get views() {
     // return object of views
     return {
-      view   : 'page/model/view',
-      menu   : 'page/model/menu',
-      config : 'page/model/config',
-      filter : 'page/model/filter',
+      view     : 'page/model/view',
+      menu     : 'page/model/menu',
+      config   : 'page/model/config',
+      filter   : 'page/model/filter',
+      connects : 'page/model/connects',
     };
   }
 

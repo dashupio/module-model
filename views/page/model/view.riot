@@ -31,6 +31,8 @@
 
         // bind methods
         this.getField = this.getField.bind(this);
+        this.getProps = this.getProps.bind(this);
+        this.getGroups = this.getGroups.bind(this);
 
         // listeners
         this.props.page.on('reload', this.safeUpdate);
