@@ -7,7 +7,10 @@
       </a>
     </label>
     <input class="form-control" if={ !props.field.model || !props.field.by || !props.field.form } readonly value="Please Complete Configuration" />
-    <eden-select if={ props.field.model && props.field.by && props.field.form } ref={ ref('select') } multiple={ props.field.multiple } load={ loadData } placeholder={ props.field.label || 'Set Label' } data={ getData() } name={ props.getName(props.field.uuid) } on-change={ (e) => onChange(e) } />
+    <eden-select if={ props.field.model && props.field.by && props.field.form } ref={ ref('select') } multiple={ props.field.multiple } load={ loadData } placeholder={ props.field.label || props.field.placeholder } data={ getData() } name={ props.getName(props.field.uuid) } on-change={ (e) => onChange(e) } />
+    <div if={ props.field.help && props.field.help.length } class="form-text">
+      { props.field.help }
+    </div>
   </div>
   
   <script>
