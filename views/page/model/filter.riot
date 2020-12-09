@@ -1,5 +1,5 @@
 <page-model-filter>
-  <dashup-page-filter sort={ true } tags={ getTags().length ? getTags() : null } fields={ props.context.fields } has-user={ props.page.get('data.user') } { ...getProps() } />
+  <dashup-page-filter sort={ true } tags={ getTags().length ? getTags() : null } fields={ props.context.fields } has-user={ props.page.get('data.user') } on-search={ (e) => onSearch(e) } { ...getProps() } />
 
   <script>
     // export default
@@ -12,6 +12,14 @@
         // tags and props
         this.getTags = this.getTags.bind(this);
         this.getProps = this.getProps.bind(this);
+      }
+
+      /**
+       * on search
+       */
+      onSearch(e, target) {
+        // search
+        this.props.props('search', (target || e.target).value);
       }
 
       /**
