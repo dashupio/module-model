@@ -150,7 +150,14 @@ export default class ModelAction extends Struct {
         const valueTemplate = handlebars.compile(field.value);
 
         // set field uuid
-        model.set(field.name, valueTemplate(data));
+        const actualValue = valueTemplate({
+          ...data,
+
+          current : model.sanitise(),
+        });
+
+        // set value
+        model.set(field.name, actualValue);
       });
 
       // save model
