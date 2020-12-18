@@ -27,7 +27,7 @@
         <label class="form-label">
           Where
         </label>
-        <dashup-query fields={ props.fields } on-change={ (v) => onQuery(v) } data-value={ props.action.query ? JSON.parse(props.action.query) : [] } />
+        <dashup-query fields={ getFields(null, true) } on-change={ (v) => onQuery(v) } data-value={ props.action.query ? JSON.parse(props.action.query) : [] } />
       </div>
 
       <hr />
@@ -196,7 +196,7 @@
       /**
        * get fields
        */
-      getFields(actualField) {
+      getFields(actualField, fieldsOnly) {
         // model
         const model = (this.props.action.update || 'this') === 'this' ? this.props.page.get('data.trigger.model') : this.props.action.model;
 
@@ -214,6 +214,9 @@
           // return accum
           return accum;
         }, []);
+
+        // fields
+        if (fieldsOnly) return fields;
 
         // return fields
         return fields.filter((f) => f).map((field) => {

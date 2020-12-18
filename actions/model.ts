@@ -1,6 +1,52 @@
 // import action
+import pretty from 'pretty-ms';
+import moment from 'moment-timezone';
+import helpers from 'handlebars-helpers';
 import handlebars from 'handlebars';
 import { Struct, Model, Query } from '@dashup/module';
+
+// register helper
+handlebars.registerHelper(helpers());
+handlebars.registerHelper('ms', (amount, extra, options) => {
+  // check now
+  amount = parseInt(amount);
+
+  // return formatted
+  return pretty(amount);
+});
+handlebars.registerHelper('date', (date, fmt, options) => {
+  // check now
+  if (date === 'now') date = new Date();
+
+  // check options
+  if (typeof fmt !== 'string') {
+    fmt = 'MMMM DD YYYY, LT';
+    options = fmt;
+  }
+
+  // return formatted
+  return moment(date).format(fmt);
+});
+handlebars.registerHelper('timezone', (tz, options) => {
+  // check now
+  let date = new Date();
+
+  // return formatted
+  return moment(date).tz(tz).format('ha z');
+});
+handlebars.registerHelper('since', (date, extra, options) => {
+  // check now
+  if (date === 'now') date = new Date();
+
+  // check options
+  if (typeof extra !== 'boolean') {
+    extra = true;
+    options = extra;
+  }
+
+  // return formatted
+  return moment(date).fromNow(extra);
+});
 
 /**
  * create dashup action
@@ -108,13 +154,55 @@ export default class ModelAction extends Struct {
         nonce : opts.nonce,
       }, 'model');
 
+      //f ound
+      let queried = false;
+
       // check filter
-      if (action.filter) {
+      if (action.query) {
         // filters
-        const filters = JSON.parse(action.filter);
+        const filters = JSON.parse(action.query);
 
         // loop
         filters.forEach((filter) => {
+          // set type
+          const type = Object.keys(filter)[0];
+
+          // set type
+          filter[type] = filter[type].map((item) => {
+            // get keys
+            const name = Object.keys(item)[0];
+            const fn = Object.keys(item[name])[0];
+
+            // create thing
+            const template = handlebars.compile(item[name][fn]);
+
+            // check name
+            if (name === '_id') {
+              // by id
+              query = query.findById(template({
+                ...data,
+              }));
+
+              // found
+              queried = true;
+              
+              // return
+              return;
+            }
+
+            // return filtered
+            return {
+              [name] : {
+                [fn] : template({
+                  ...data,
+                }),
+              },
+            };
+          }).filter((t) => t);
+
+          // check length
+          if (!filter[type].length) return;
+
           // where
           query = query.where(filter);
         });
@@ -123,10 +211,10 @@ export default class ModelAction extends Struct {
       // find
       if (action.update === 'update') {
         // find
-        models = await query.find();
+        models = await queried ? [await query] : query.find();
       } else {
         // models
-        const found = await query.findOne();
+        const found = await queried ? await query : query.findOne();
 
         // found
         models = found ? [found] : [];
