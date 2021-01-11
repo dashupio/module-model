@@ -94,23 +94,61 @@ export default class ModelField extends Struct {
    * @param {*} field 
    * @param {*} value 
    */
-  async submit({ req, old }, field, value) {
+  async submit(opts, field, value) {
     // check value
     if (!value) value = [];
     if (!Array.isArray(value)) value = [value];
 
+    // parsed values
+    const parsed = await Promise.all(value.filter(val => val).map(async (val, i) => {
+      // run try catch
+      try {
+        // check mod
+        return val._id || val.id || val;
+      } catch (e) {
+        // return old
+        return opts.old[i];
+      }
+    }));
+
+    // let form
+    let form = null;
+
+    // search by matching field
+    const data = await Promise.all(parsed.map(async (id) => {
+      // check id
+      if (!id) return;
+      if (`${id}`.match(/^[0-9a-fA-F]{24}$/)) return id;
+
+      // create email
+      form = form || await new Query({
+        struct : 'form',
+      }, 'page').findById((field.form || {}).id);
+      
+      // form field
+      const formField = form ? ((form.get('data.fields') || []).find((f) => f.uuid === (field.model || {}).id || field.model) || {}) : {};
+
+      // query model
+      const item = await new Query({
+        ...opts,
+
+        form : (field.form || {}).id || field.form,
+        page : (field.model || {}).id || field.model,
+      }, 'model').where({
+        [formField.name || formField.id] : id,
+      }).findOne();
+
+      // check item
+      if (item) {
+        // return value
+        return item._id || item.get('_id');
+      }
+    }));
+
+
     // return value map
     return {
-      value : await Promise.all(value.filter(val => val).map(async (val, i) => {
-        // run try catch
-        try {
-          // check mod
-          return val._id || val.id || val;
-        } catch (e) {
-          // return old
-          return old[i];
-        }
-      })),
+      value : data.filter((i) => i),
     };
   }
 
@@ -125,6 +163,9 @@ export default class ModelField extends Struct {
     // get value
     if (!value) value = [];
     if (!Array.isArray(value)) value = [value];
+
+    // filter out not matching
+    value = value.filter((v) => v.match(/^[0-9a-fA-F]{24}$/));
 
     // query model
     const values = await new Query({
