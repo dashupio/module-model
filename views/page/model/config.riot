@@ -121,9 +121,6 @@
        * on model
        */
       onGroup(val) {
-        // get value
-        if (!val) val = this.refs.group.val();
-      
         // set model
         this.props.data('group', val || null);
       }
