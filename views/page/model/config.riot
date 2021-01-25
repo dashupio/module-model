@@ -10,7 +10,7 @@
       </small>
     </div>
 
-    <div if={ props.page.get('data.forms.0') }>
+    <div if={ props.context.fields }>
       <hr />
         
       <div class="mb-3">
@@ -178,7 +178,7 @@
        */
       getUser() {
         // return value
-        return [...(this.props.context.fields)].filter((field) => ['user'].includes(field.type)).map((field) => {
+        return [...(this.props.context.fields || [])].filter((field) => ['user'].includes(field.type)).map((field) => {
           // return fields
           return {
             name     : field.label || field.name,
@@ -193,7 +193,7 @@
        */
       getGroup() {
         // return value
-        return [...(this.props.context.fields)].filter((field) => ['select', 'checkbox'].includes(field.type)).map((field) => {
+        return [...(this.props.context.fields || [])].map((field) => {
           // return fields
           return {
             name     : field.label || field.name,
