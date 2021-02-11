@@ -40,8 +40,8 @@
     </button>
 
     <div class="dropdown-menu" aria-labelledby="dropdown-add">
-      <button each={ (form, i) in getForms() } class="dropdown-item" onclick={ (e) => props.onItem(e, null, form) }>
-        { props.dashup.page(form).get('name') }
+      <button each={ (form, i) in getForms() } class="dropdown-item" onclick={ (e) => props.onItem(e, null, form.get('_id')) }>
+        { form.get('name') }
       </button>
     </div>
   </div>
@@ -93,7 +93,7 @@
        */
       getForms() {
         // only forms that exist
-        return (props.page.get('data.forms') || []).filter((f) => this.props.dashup.page(f));
+        return (this.props.page.get('data.forms') || []).map((f) => this.props.dashup.page(f)).filter((f) => f);
       }
 
       /**
