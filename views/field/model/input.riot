@@ -147,14 +147,17 @@
        * get fields
        */
       getFields() {
-        // model
-        let form = this.props.field.form;
+        // by
+        let model = this.props.field.model;
 
         // model
-        form = form && form.id ? form.id : form;
+        model = model && model.id ? model.id : model;
+
+        // get forms
+        const forms = Array.from(this.props.dashup.get('pages').values()).filter((p) => p.get('type') === 'form' && p.get('data.model') === model);
 
         // return fields
-        return (form ? (this.props.dashup.page(form).get('data.fields') || []) : []);
+        return [].concat(...(forms.map((f) => (f.get('data.fields') || []))));
       }
 
       /**
