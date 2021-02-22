@@ -205,8 +205,11 @@
         // model
         form = form && form.id ? form.id : form;
 
+        // get form
+        const actualForm = form ? this.props.dashup.page(form) : null;
+
         // return fields
-        return (form ? (this.props.dashup.page(form).get('data.fields') || []) : []);
+        return (actualForm ? (actualForm.get('data.fields') || []) : []);
       }
 
       /**
