@@ -123,7 +123,7 @@ export default class ModelField extends Struct {
       // create email
       form = form || await new Query({
         struct : 'form',
-      }, 'page').findById((field.form || {}).id);
+      }, 'page').findById((field.form || {}).id || field.form);
       
       // form field
       const formField = form ? ((form.get('data.fields') || []).find((f) => f.uuid === (field.model || {}).id || field.model) || {}) : {};

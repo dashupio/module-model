@@ -17,11 +17,17 @@
 
         // check array
         if (!Array.isArray(value)) value = [value];
+        
+        // by
+        let model = this.props.field.model;
+
+        // model
+        model = model && model.id ? model.id : model;
 
         // get form
         const forms = Array.from(props.dashup.get('pages').values()).filter((p) => {
           // return model check
-          return p.get('type') === 'form' && p.get('data.model') === props.field.model;
+          return p.get('type') === 'form' && p.get('data.model') === model;
         });
 
         // check form
