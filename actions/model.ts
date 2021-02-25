@@ -204,6 +204,9 @@ export default class ModelAction extends Struct {
           if (!filter[type].length) return;
 
           // where
+          if (query instanceof Promise) return;
+
+          // add query
           query = query.where(filter);
         });
       }
@@ -211,10 +214,10 @@ export default class ModelAction extends Struct {
       // find
       if (action.update === 'update') {
         // find
-        models = await queried ? [await query] : query.find();
+        models = queried ? [await query] : query.find();
       } else {
         // models
-        const found = await queried ? await query : query.findOne();
+        const found = queried ? await query : query.findOne();
 
         // found
         models = found ? [found] : [];
@@ -234,6 +237,9 @@ export default class ModelAction extends Struct {
     models.forEach((model) => {
       // loop fields
       action.fields.forEach((field) => {
+        // check field
+        if (!field.name) return;
+
         // template
         const valueTemplate = handlebars.compile(field.value);
 
