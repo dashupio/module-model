@@ -226,11 +226,11 @@ export default class ModelAction extends Struct {
       // or create
       if (action.update === 'findOrCreate' && !models.length) {
         // create model
-        models = [new Model({})];
+        models = [new Model({}, 'model')];
       }
     } else if (['create'].includes(action.update)) {
       // new model
-      models = [new Model({})];
+      models = [new Model({}, 'model')];
     }
 
     // log models
