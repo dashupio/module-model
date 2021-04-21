@@ -47,6 +47,10 @@ handlebars.registerHelper('since', (date, extra, options) => {
   // return formatted
   return moment(date).fromNow(extra);
 });
+handlebars.registerHelper('var', (varName, varValue, options) => {
+  // set var
+  options.data.root[varName] = varValue;
+});
 
 /**
  * create dashup action
@@ -144,7 +148,7 @@ export default class ModelAction extends Struct {
     // check model
     if (action.update === 'this') {
       // model
-      models = [new Model(data.model)];
+      models = [new Model(data.model, 'model')];
     } else if (['update', 'updateOne', 'findOrCreate'].includes(action.update)) {
       // query model
       let query = new Query({
@@ -250,15 +254,20 @@ export default class ModelAction extends Struct {
           current : model.sanitise(),
         });
 
+        console.log('test 2', data, model, actualValue);
+
         // set value
         model.set(field.name, actualValue);
       });
+
+      console.log(opts, 'test', model.get('_meta.page'), model.get('_meta.model'));
 
       // save model
       model.save({
         ...opts,
 
         page  : model.get('_meta.page'),
+        form  : model.get('_meta.form'),
         model : action.model || model.get('_meta.model'),
       })
     });
