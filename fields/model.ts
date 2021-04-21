@@ -111,8 +111,6 @@ export default class ModelField extends Struct {
       }
     }));
 
-    console.log('saving', parsed, value);
-
     // let form
     let form = null;
 

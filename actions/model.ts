@@ -254,13 +254,9 @@ export default class ModelAction extends Struct {
           current : model.sanitise(),
         });
 
-        console.log('test 2', data, model, actualValue);
-
         // set value
         model.set(field.name, actualValue);
       });
-
-      console.log(opts, 'test', model.get('_meta.page'), model.get('_meta.model'));
 
       // save model
       model.save({
