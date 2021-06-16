@@ -47,7 +47,7 @@ export default class ModelTrigger extends Struct {
   get views() {
     // return object of views
     return {
-      config : 'trigger/model/config',
+      config : 'trigger/model',
     };
   }
 

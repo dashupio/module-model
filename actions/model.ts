@@ -98,7 +98,7 @@ export default class ModelAction extends Struct {
   get views() {
     // return object of views
     return {
-      config : 'action/model/config',
+    //  config : 'action/model/config',
     };
   }
 

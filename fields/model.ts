@@ -2,6 +2,9 @@
 // import field interface
 import { Struct, Query } from '@dashup/module';
 
+// loading
+const loading = {};
+
 /**
  * build address helper
  */
@@ -27,11 +30,15 @@ export default class ModelField extends Struct {
   get views() {
     // return object of views
     return {
+      view  : 'field/model/view',
+      input : 'field/model',
+      /*
       view     : 'field/model/view',
       input    : 'field/model/input',
       config   : 'field/model/config',
       display  : 'field/model/display',
       validate : 'field/model/validate',
+      */
     };
   }
   /**
@@ -85,6 +92,34 @@ export default class ModelField extends Struct {
   get description() {
     // return description string
     return 'Model Field';
+  }
+
+  // load user
+  loadModel(id, field, opts) {
+    // check loading
+    if (loading[id]) return loading[id];
+
+    // return promise
+    loading[id] = new Promise((resolve) => {
+      // query model
+      new Query({
+        ...opts,
+
+        form : (field.form || {}).id || field.form,
+        page : (field.model || {}).id || field.model,
+      }, 'model').findById(id).then(resolve);
+    });
+
+    // add timeout
+    loading[id].then(() => {
+      // cache for 2 seconds
+      setTimeout(() => {
+        delete loading[id];
+      }, 2000);
+    });
+
+    // return loading
+    return loading[id];
   }
 
   /**
@@ -167,17 +202,12 @@ export default class ModelField extends Struct {
     // filter out not matching
     value = value.filter((v) => v.match(/^[0-9a-fA-F]{24}$/));
 
-    // query model
-    const values = await new Query({
-      ...opts,
-
-      form : (field.form || {}).id || field.form,
-      page : (field.model || {}).id || field.model,
-    }, 'model').findByIds(value.map((v) => v.id || v));
+    // load users
+    const models = await Promise.all(value.map((id) => this.loadModel(id, field, opts)));
 
     // map values
     return {
-      sanitised : (values || []).map((val) => val && val.sanitise()).filter((v) => v)
+      sanitised : models.map((val) => val && val.sanitise()).filter((v) => v)
     };
   }
 }

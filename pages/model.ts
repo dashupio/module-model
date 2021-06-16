@@ -36,7 +36,29 @@ export default class ModelPage extends Struct {
    */
   get data() {
     // return page data
-    return {};
+    return {
+      default : {
+        title : 'The Model page requires a Form in order for data to be submitted to it, do you want us to create that page?',
+        check : [
+          'forms',
+        ],
+        pages : [
+          {
+            _id  : 'form',
+            type : 'form',
+            icon : 'plus fas',
+            name : `Create {{ name }}`,
+            data : {
+              model : '{{ _id }}',
+            },
+            parent : '{{ _id }}',
+          },
+        ],
+        replace : {
+          'data.forms' : ['{{ form }}'],
+        },
+      }
+    };
   }
 
   /**
@@ -45,11 +67,14 @@ export default class ModelPage extends Struct {
   get views() {
     // return object of views
     return {
-      view     : 'page/model/view',
+      view     : 'page/model',
+      config   : 'page/model/config',
+      /*
       menu     : 'page/model/menu',
       config   : 'page/model/config',
       filter   : 'page/model/filter',
       connects : 'page/model/connects',
+      */
     };
   }
 
