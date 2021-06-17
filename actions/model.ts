@@ -98,7 +98,7 @@ export default class ModelAction extends Struct {
   get views() {
     // return object of views
     return {
-    //  config : 'action/model/config',
+      config : 'action/model',
     };
   }
 
@@ -242,7 +242,7 @@ export default class ModelAction extends Struct {
       // loop fields
       action.fields.forEach((field) => {
         // check field
-        if (!field.name) return;
+        if (!field.field && !field.name) return;
 
         // template
         const valueTemplate = handlebars.compile(field.value);
@@ -255,7 +255,7 @@ export default class ModelAction extends Struct {
         });
 
         // set value
-        model.set(field.name, actualValue);
+        model.set(field.field || field.name, actualValue);
       });
 
       // save model

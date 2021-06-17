@@ -5,7 +5,7 @@ import { Page, Grid, View, Hbs } from '@dashup/ui';
 import React, { useState, useEffect } from 'react';
 
 // create model page
-const ModelPage = (props = {}) => {
+const PageModel = (props = {}) => {
   // groups
   const [skip, setSkip] = useState(0);
   const [total, setTotal] = useState(0);
@@ -451,4 +451,4 @@ const ModelPage = (props = {}) => {
 };
 
 // export default model page
-export default ModelPage;
+export default PageModel;

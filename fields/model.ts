@@ -30,15 +30,9 @@ export default class ModelField extends Struct {
   get views() {
     // return object of views
     return {
-      view  : 'field/model/view',
-      input : 'field/model',
-      /*
-      view     : 'field/model/view',
-      input    : 'field/model/input',
-      config   : 'field/model/config',
-      display  : 'field/model/display',
-      validate : 'field/model/validate',
-      */
+      view   : 'field/model/view',
+      input  : 'field/model',
+      config : 'field/model/config',
     };
   }
   /**
