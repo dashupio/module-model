@@ -1,9 +1,8 @@
 
 // import react
 import React from 'react';
-import Query from '@dashup/ui';
-import Select from 'react-select';
 import shortid from 'shortid';
+import { Query, Select } from '@dashup/ui';
 
 // create action model
 const ActionModel = (props = {}) => {

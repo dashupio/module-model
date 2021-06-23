@@ -86,6 +86,9 @@ export default class ModelTrigger extends Struct {
    * @param id 
    */
   async modelEvent(type, opts, data) {
+    // check model
+    if (!data?._meta.model) return;
+
     // query pages where
     const pages = await new Query(opts, 'page').where({
       type                 : 'flow',

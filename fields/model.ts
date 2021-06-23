@@ -60,7 +60,9 @@ export default class ModelField extends Struct {
   get data() {
     // return field type label
     return {
-      tabs : ['Config', 'Display'],
+      tabs      : ['Config', 'Display'],
+      multiple  : false,
+      operators : ['$eq', '$ne', '$in', '$nin', '$exists'],
     };
   }
 

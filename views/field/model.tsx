@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 // text field
 const ModelField = (props = {}) => {
   // search
+  const [value, setValue] = useState((Array.isArray(props.value) ? props.value : (props.value && [props.value]) || []));
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState(null);
 
@@ -25,7 +26,10 @@ const ModelField = (props = {}) => {
     if (!byField) return;
 
     // get array of values
-    const values = (Array.isArray(props.value) ? props.value : (props.value && [props.value]) || []).map((item) => {
+    const values = value.map((item) => {
+      // check string
+      if (typeof item === 'string') return;
+
       // return value
       return {
         data  : item,
@@ -51,6 +55,40 @@ const ModelField = (props = {}) => {
 
     // return fields
     return [].concat(...(forms.map((f) => (f.get('data.fields') || []))));
+  };
+
+  // load value
+  const loadValue = async () => {
+    // by
+    const by    = props.field.by?.id || props.field.by;
+    const model = props.field.model?.id || props.field.model;
+
+    // check by/model
+    if (!by || !model) return [];
+
+    // get model
+    const modelPage = props.dashup.page(model);
+
+    // check by model
+    if (!modelPage) return [];
+
+    // by field
+    const byField = getFields().find((f) => f.uuid === by);
+
+    // check by field
+    if (!byField) return [];
+
+    // find by ids
+    const loadedValue = await Promise.all(value.map((val) => {
+      // check string
+      if (typeof val === 'string') val = modelPage.findById(val);
+
+      // return val
+      return val;
+    }));
+
+    // return loaded
+    return loadedValue.filter((v) => v);
   };
 
   // load options
@@ -106,9 +144,23 @@ const ModelField = (props = {}) => {
     });
   };
 
+  // on change
+  const onChange = (val) => {
+    // set value
+    let actualValue = val?.value || (Array.isArray(val) ? val.map((v) => v?.value) : null);
+
+    // make array
+    if (!Array.isArray(actualValue)) actualValue = [actualValue].filter((v) => v);
+
+    // set value
+    setValue(actualValue); 
+    props.onChange(props.field, actualValue);   
+  };
+
   // use effect
   useEffect(() => {
     // load options
+    loadValue().then(setValue);
     loadOptions(search).then(setOptions);
   }, [props.field.uuid]);
 
@@ -150,7 +202,7 @@ const ModelField = (props = {}) => {
         cacheOptions
 
         isMulti={ props.field.multiple }
-        onChange={ (e) => props.onChange(props.field, e && e.data) }
+        onChange={ onChange }
         components={ { Option } }
         placeholder={ props.field.placeholder || `Enter ${props.field.label}` }
         loadOptions={ loadOptions }
@@ -158,7 +210,7 @@ const ModelField = (props = {}) => {
         onInputChange={ (v) => setSearch(v) }
         defaultOptions={ options }
         />
-      { !!props.field.help && (
+      { !!props.field.help && !props.noLabel && (
         <Form.Text className="form-help">
           { props.field.help }
         </Form.Text>
