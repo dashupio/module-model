@@ -1,7 +1,7 @@
 
 // import dependencies
 import { Form } from 'react-bootstrap';
-import AsyncSelect from 'react-select/async';
+import { Select } from '@dashup/ui';
 import React, { useState, useEffect } from 'react';
 
 // text field
@@ -197,12 +197,14 @@ const ModelField = (props = {}) => {
           ) }  
         </Form.Label>
       ) }
-      <AsyncSelect
+      <Select
+        async
         isClearable
         cacheOptions
 
         isMulti={ props.field.multiple }
         onChange={ onChange }
+        readOnly={ props.readOnly }
         components={ { Option } }
         placeholder={ props.field.placeholder || `Enter ${props.field.label}` }
         loadOptions={ loadOptions }
