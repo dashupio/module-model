@@ -51,7 +51,7 @@ const ModelField = (props = {}) => {
     let model = props.field.model?.id || props.field.model;
 
     // get forms
-    const forms = Array.from(props.dashup.get('pages').values()).filter((p) => p.get('type') === 'form' && p.get('data.model') === model);
+    const forms = Array.from(props.dashup.get('pages').values()).filter((p) => p.get('type') === 'form' && p.get('data.model') === model && !p.get('archived'));
 
     // return fields
     return [].concat(...(forms.map((f) => (f.get('data.fields') || []))));
@@ -147,14 +147,14 @@ const ModelField = (props = {}) => {
   // on change
   const onChange = (val) => {
     // set value
-    let actualValue = val?.value || (Array.isArray(val) ? val.map((v) => v?.value) : null);
+    let actualValue = val?.data || (Array.isArray(val) ? val.map((v) => v?.data) : null);
 
     // make array
     if (!Array.isArray(actualValue)) actualValue = [actualValue].filter((v) => v);
 
     // set value
     setValue(actualValue); 
-    props.onChange(props.field, actualValue);   
+    props.onChange(props.field, actualValue);
   };
 
   // use effect

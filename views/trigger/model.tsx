@@ -21,7 +21,7 @@ const TriggerModel = (props = {}) => {
   // get model
   const getModel = () => {
     // push
-    return Array.from(props.dashup.get('pages').values()).filter((p) => p.get('type') === 'model').map((page) => {
+    return Array.from(props.dashup.get('pages').values()).filter((p) => p.get('type') === 'model' && !p.get('archived')).map((page) => {
       // return object
       return {
         label    : page.get('name'),

@@ -14,7 +14,7 @@ const ModelFieldView = (props = {}) => {
     // get form
     const forms = Array.from(props.dashup.get('pages').values()).filter((p) => {
       // return model check
-      return p.get('type') === 'form' && p.get('data.model') === model;
+      return p.get('type') === 'form' && p.get('data.model') === model && !p.get('archived');
     });
 
     // check form
@@ -55,7 +55,7 @@ const ModelFieldView = (props = {}) => {
       { getValue().map((model, i) => {
         // return jsx
         return (
-          <a key={ `${props.id}-model-${model.id}` } href={ `/app/${model.form}/${model.id}` } className="btn btn-sm btn-info me-1">
+          <a key={ `${props.id}-model-${model.id}` } href={ `/app/${model.form}/${model.id}` } className="btn btn-sm btn-primary me-1">
             { model.name }
           </a>
         );

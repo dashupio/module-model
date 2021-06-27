@@ -61,7 +61,7 @@ export default class ModelField extends Struct {
     // return field type label
     return {
       tabs      : ['Config', 'Display'],
-      multiple  : false,
+      multiple  : true,
       operators : ['$eq', '$ne', '$in', '$nin', '$exists'],
     };
   }
@@ -99,15 +99,21 @@ export default class ModelField extends Struct {
     loading[id] = new Promise((resolve) => {
       // query model
       new Query({
-        ...opts,
-
-        form : (field.form || {}).id || field.form,
-        page : (field.model || {}).id || field.model,
+        form   : field?.form?.id || field.form,
+        page   : field?.model?.id || field.model,
+        model  : field?.model?.id || field.model,
+        dashup : opts.dashup,
       }, 'model').findById(id).then(resolve);
     });
 
     // add timeout
-    loading[id].then(() => {
+    loading[id].then((data) => {
+      // check data
+      if (!data) {
+        delete loading[id];
+        return;
+      }
+
       // cache for 2 seconds
       setTimeout(() => {
         delete loading[id];
@@ -142,44 +148,12 @@ export default class ModelField extends Struct {
       }
     }));
 
-    // let form
-    let form = null;
-
     // search by matching field
-    const data = await Promise.all(parsed.map(async (id) => {
-      // check id
-      if (!id) return;
-      if (`${id}`.match(/^[0-9a-fA-F]{24}$/)) return id;
-
-      // create email
-      form = form || await new Query({
-        struct : 'form',
-      }, 'page').findById((field.form || {}).id || field.form);
-      
-      // form field
-      const formField = form ? ((form.get('data.fields') || []).find((f) => f.uuid === (field.model || {}).id || field.model) || {}) : {};
-
-      // query model
-      const item = await new Query({
-        ...opts,
-
-        form : (field.form || {}).id || field.form,
-        page : (field.model || {}).id || field.model,
-      }, 'model').where({
-        [formField.name || formField.id] : id,
-      }).findOne();
-
-      // check item
-      if (item) {
-        // return value
-        return item._id || item.get('_id');
-      }
-    }));
-
+    const data = await Promise.all(parsed.map((id) => this.loadModel(id, field, opts)));
 
     // return value map
     return {
-      value : data.filter((i) => i),
+      value : data.filter((i) => i).map((item) => item.get('_id')),
     };
   }
 

@@ -28,7 +28,7 @@ const ActionModel = (props = {}) => {
     // return value
     return Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
-      return page.get('type') === 'model';
+      return page.get('type') === 'model' && !page.get('archived');
     }).map((page) => {
       // return type
       return {

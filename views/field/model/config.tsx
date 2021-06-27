@@ -11,7 +11,7 @@ const FieldModelConfig = (props = {}) => {
     // get forms
     const forms = Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
-      return page.get('type') === 'model';
+      return page.get('type') === 'model' && !page.get('archived');
     });
 
     // return mapped
@@ -31,7 +31,7 @@ const FieldModelConfig = (props = {}) => {
     // get forms
     const forms = Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
-      return page.get('type') === 'form' && page.get('data.model') === props.field.model;
+      return page.get('type') === 'form' && page.get('data.model') === props.field.model && !page.get('archived');
     });
 
     // return mapped
@@ -51,7 +51,7 @@ const FieldModelConfig = (props = {}) => {
     // get forms
     const forms = Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
-      return page.get('type') === 'form' && page.get('data.model') === props.field.model;
+      return page.get('type') === 'form' && page.get('data.model') === props.field.model && !page.get('archived');
     });
 
     // return mapped
