@@ -6,8 +6,19 @@ import React, { useState, useEffect } from 'react';
 
 // text field
 const ModelField = (props = {}) => {
+  // aValue
+  const aValue = props.value;
+
   // search
-  const [value, setValue] = useState((Array.isArray(props.value) ? props.value : (props.value && [props.value]) || []));
+  const [value, setValue] = useState(((Array.isArray(aValue) ? aValue : aValue && [aValue]) || []).map((val) => {
+    // check value
+    if (typeof val === 'object' && !(val instanceof props.dashup.Model)) {
+      return new props.dashup.Model(val);
+    }
+
+    // return val
+    return val;
+  }));
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState(null);
 

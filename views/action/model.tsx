@@ -51,6 +51,9 @@ const ActionModel = (props = {}) => {
     const forms = props.getForms([model]);
     const fields = props.getFields(forms);
 
+    // check fields
+    if (field === true) return fields;
+
     // return fields
     return fields.map((f) => {
       // return object
@@ -125,7 +128,16 @@ const ActionModel = (props = {}) => {
           <label className="form-label">
             Where
           </label>
-          <Query onChange={ console.log } />
+          <Query
+            isString
+
+            page={ props.page }
+            query={ props.action.filter }
+            dashup={ props.dashup }
+            fields={ getFields(true) }
+            onChange={ (val) => props.setAction(props.action, 'filter', val) }
+            getFieldStruct={ props.getFieldStruct }
+            />
         </div>
       ) }
 
