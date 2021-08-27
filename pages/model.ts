@@ -20,7 +20,7 @@ export default class ModelPage extends Struct {
    */
   get icon() {
     // return page type label
-    return 'fa fa-database';
+    return 'fad fa-database text-warning';
   }
 
   /**
@@ -28,7 +28,7 @@ export default class ModelPage extends Struct {
    */
   get title() {
     // return page type label
-    return 'Model Page';
+    return 'Model';
   }
 
   /**
@@ -56,6 +56,13 @@ export default class ModelPage extends Struct {
         ],
         replace : {
           'data.forms' : ['{{ form }}'],
+        },
+      },
+
+      share : {
+        acls  : ['view'],
+        pages : {
+          'data.forms' : false,
         },
       }
     };
@@ -91,6 +98,6 @@ export default class ModelPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Model create page';
+    return 'Dashup database model type';
   }
 }

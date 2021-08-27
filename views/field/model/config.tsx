@@ -21,7 +21,7 @@ const FieldModelConfig = (props = {}) => {
         value : form.get('_id'),
         label : form.get('name'),
 
-        selected : (props.field.model || []).includes(form.get('_id')),
+        selected : (props.field.model || [])?.includes(form.get('_id')),
       };
     });
   };
@@ -41,7 +41,7 @@ const FieldModelConfig = (props = {}) => {
         value : form.get('_id'),
         label : form.get('name'),
 
-        selected : (props.field.form || []).includes(form.get('_id')),
+        selected : (props.field.form || [])?.includes(form.get('_id')),
       };
     });
   };

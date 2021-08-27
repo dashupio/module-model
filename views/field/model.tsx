@@ -30,21 +30,31 @@ const ModelField = (props = {}) => {
     // check by/model
     if (!by) return [];
 
+    // get fields
+    const fields = getFields();
+
     // by field
-    const byField = getFields().find((f) => f.uuid === by);
+    const byField  = fields.find((f) => f.uuid === by);
+    const byParent = byField?.parent && fields.find((f) => f.uuid === byField.parent);
 
     // check by field
-    if (!byField) return;
+    if (!byField) return [];
 
     // get array of values
     const values = value.map((item) => {
       // check string
       if (typeof item === 'string') return;
 
+      // get label
+      const label = byParent ? (
+        item.get(`${byParent.name || byParent.uuid}.0.${byField.name || byField.uuid}`) ||
+        item.get(`${byParent.name || byParent.uuid}.${byField.name || byField.uuid}`)
+      ) : item.get(byField.name || byField.uuid);
+
       // return value
       return {
+        label,
         data  : item,
-        label : item.get(byField.name || byField.uuid),
         value : item.get('_id'),
       };
     });
@@ -117,8 +127,12 @@ const ModelField = (props = {}) => {
     // check by model
     if (!modelPage) return [];
 
+    // get fields
+    const fields = getFields();
+
     // by field
-    const byField = getFields().find((f) => f.uuid === by);
+    const byField  = fields.find((f) => f.uuid === by);
+    const byParent = byField?.parent && fields.find((f) => f.uuid === byField.parent);
 
     // check by field
     if (!byField) return [];
@@ -138,7 +152,7 @@ const ModelField = (props = {}) => {
     // inc
     if (inputValue && inputValue.length) {
       // inc
-      data = data.inc(byField.name || byField.uuid, inputValue);
+      data = data.search(inputValue);
     }
 
     // add limit
@@ -146,10 +160,16 @@ const ModelField = (props = {}) => {
 
     // return map
     return result.map((item) => {
+      // get label
+      const label = byParent ? (
+        item.get(`${byParent.name || byParent.uuid}.0.${byField.name || byField.uuid}`) ||
+        item.get(`${byParent.name || byParent.uuid}.${byField.name || byField.uuid}`)
+      ) : item.get(byField.name || byField.uuid);
+
       // return value
       return {
+        label,
         data  : item,
-        label : item.get(byField.name || byField.uuid),
         value : item.get('_id'),
       };
     });
@@ -173,7 +193,7 @@ const ModelField = (props = {}) => {
     // load options
     loadValue().then(setValue);
     loadOptions(search).then(setOptions);
-  }, [props.field.uuid]);
+  }, [props.field.uuid, props.field.model, props.field.form, props.field.by]);
 
   // custom option
   const Option = ({ data, isDisabled, isSelected, innerProps, innerRef }) => {
@@ -217,7 +237,7 @@ const ModelField = (props = {}) => {
         onChange={ onChange }
         readOnly={ props.readOnly }
         components={ { Option } }
-        placeholder={ props.field.placeholder || `Enter ${props.field.label}` }
+        placeholder={ props.field.placeholder || `Select ${props.field.label}` }
         loadOptions={ loadOptions }
         defaultValue={ getValue() }
         onInputChange={ (v) => setSearch(v) }

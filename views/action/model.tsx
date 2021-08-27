@@ -151,8 +151,8 @@ const ActionModel = (props = {}) => {
                 // return jsx
                 return (
                   <div key={ `field-${props.action.uuid}-${i}` } className="d-flex align-items-center mb-2">
-                    <Select options={ getFields() } defaultValue={ getFields(field).filter((f) => f.selected) } onChange={ (val) => onField(field, 'field', val?.value) } />
-                    <input className="form-control flex-1" value={ field.value || '' } onChange={ (e) => onField(field, 'field', val?.value) } />
+                    <Select options={ getFields() } className="w-25 me-2" defaultValue={ getFields(field).filter((f) => f.selected) } onChange={ (val) => onField(field, 'field', val?.value) } />
+                    <input className="form-control flex-1" value={ field.value || '' } onChange={ (e) => onField(field, 'value', e.target.value) } />
                     <button className="btn btn-danger ms-2" onClick={ (e) => onRemove(e, i) }>
                       <i className="fa fa-times" />
                     </button>

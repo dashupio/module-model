@@ -1,20 +1,34 @@
 // import action
 import pretty from 'pretty-ms';
 import moment from 'moment-timezone';
-import helpers from 'handlebars-helpers';
-import handlebars from 'handlebars';
+import Handlebars from 'handlebars';
+import HandlebarsHelpers from 'handlebars-helpers';
 import { Struct, Model, Query } from '@dashup/module';
 
 // register helper
-handlebars.registerHelper(helpers());
-handlebars.registerHelper('ms', (amount, extra, options) => {
+Handlebars.registerHelper(HandlebarsHelpers());
+Handlebars.registerHelper('ms', (amount, extra, options) => {
   // check now
   amount = parseInt(amount);
 
   // return formatted
   return pretty(amount);
 });
-handlebars.registerHelper('date', (date, fmt, options) => {
+Handlebars.registerHelper('age', (date, start, options) => {
+  // date
+  let from = new Date();
+
+  console.log(date, start);
+
+  // check options
+  if (start instanceof Date) {
+    from = start;
+  }
+
+  // return amount
+  return moment(from).diff(date, 'years');
+});
+Handlebars.registerHelper('date', (date, fmt, options) => {
   // check now
   if (date === 'now') date = new Date();
 
@@ -27,14 +41,14 @@ handlebars.registerHelper('date', (date, fmt, options) => {
   // return formatted
   return moment(date).format(fmt);
 });
-handlebars.registerHelper('timezone', (tz, options) => {
+Handlebars.registerHelper('timezone', (tz, options) => {
   // check now
   let date = new Date();
 
   // return formatted
   return moment(date).tz(tz).format('ha z');
 });
-handlebars.registerHelper('since', (date, extra, options) => {
+Handlebars.registerHelper('since', (date, extra, options) => {
   // check now
   if (date === 'now') date = new Date();
 
@@ -47,7 +61,7 @@ handlebars.registerHelper('since', (date, extra, options) => {
   // return formatted
   return moment(date).fromNow(extra);
 });
-handlebars.registerHelper('var', (varName, varValue, options) => {
+Handlebars.registerHelper('var', (varName, varValue, options) => {
   // set var
   options.data.root[varName] = varValue;
 });
@@ -81,7 +95,7 @@ export default class ModelAction extends Struct {
    */
   get icon() {
     // return trigger type label
-    return 'fa fa-play';
+    return 'fad fa-database';
   }
 
   /**
@@ -125,7 +139,7 @@ export default class ModelAction extends Struct {
    */
   get description() {
     // return description string
-    return 'Trigger Model';
+    return 'Create or Update Model';
   }
 
   /**
@@ -178,7 +192,7 @@ export default class ModelAction extends Struct {
             const fn = Object.keys(item[name])[0];
 
             // create thing
-            const template = handlebars.compile(item[name][fn]);
+            const template = Handlebars.compile(item[name][fn]);
 
             // check name
             if (name === '_id') {
@@ -242,10 +256,10 @@ export default class ModelAction extends Struct {
       // loop fields
       action.fields.forEach((field) => {
         // check field
-        if (!field.field && !field.name) return;
+        if (!field.field) return;
 
         // template
-        const valueTemplate = handlebars.compile(field.value);
+        const valueTemplate = Handlebars.compile(field.value);
 
         // set field uuid
         const actualValue = valueTemplate({
@@ -253,9 +267,9 @@ export default class ModelAction extends Struct {
 
           current : model.sanitise(),
         });
-
+        
         // set value
-        model.set(field.field || field.name, actualValue);
+        model.set(field.field, actualValue);
       });
 
       // save model

@@ -70,6 +70,14 @@ export default class ModelField extends Struct {
   /**
    * returns field type
    */
+  get icon() {
+    // return field type label
+    return 'fad fa-link';
+  }
+
+  /**
+   * returns field type
+   */
   get title() {
     // return field type label
     return 'Model';
@@ -88,7 +96,7 @@ export default class ModelField extends Struct {
    */
   get description() {
     // return description string
-    return 'Model Field';
+    return 'External Model Link';
   }
 
   // load user
