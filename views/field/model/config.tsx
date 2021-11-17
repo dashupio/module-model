@@ -1,13 +1,13 @@
 
 // import react
-import React from 'react';
-import { Query, Select } from '@dashup/ui';
+import { Box, Divider, Query, Autocomplete, TextField } from '@dashup/ui';
+import React, { useCallback } from 'react';
 
 // block list
 const FieldModelConfig = (props = {}) => {
 
   // get forms
-  const getModels = () => {
+  const getModels = useCallback(() => {
     // get forms
     const forms = Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
@@ -24,10 +24,10 @@ const FieldModelConfig = (props = {}) => {
         selected : (props.field.model || [])?.includes(form.get('_id')),
       };
     });
-  };
+  }, [props.field.model]);
 
   // get forms
-  const getForms = () => {
+  const getForms = useCallback(() => {
     // get forms
     const forms = Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
@@ -44,10 +44,10 @@ const FieldModelConfig = (props = {}) => {
         selected : (props.field.form || [])?.includes(form.get('_id')),
       };
     });
-  };
+  }, [props.field.form]);
 
   // get forms
-  const getField = () => {
+  const getField = useCallback(() => {
     // get forms
     const forms = Array.from(props.dashup.get('pages').values()).filter((page) => {
       // return model pages
@@ -64,7 +64,7 @@ const FieldModelConfig = (props = {}) => {
         selected : props.field.by === field.uuid,
       };
     });
-  };
+  }, [props.field.by]);
 
   // on forms
   const onModel = (value) => {
@@ -87,53 +87,78 @@ const FieldModelConfig = (props = {}) => {
   // return jsx
   return (
     <>
-      <div className="mb-3">
-        <label className="form-label">
-          Choose Model
-        </label>
-        <Select options={ getModels() } defaultValue={ getModels().filter((f) => f.selected) } onChange={ onModel } />
-        <small>
-          The model this field should display.
-        </small>
-      </div>
+      <Autocomplete
+        fullWidth
+        options={ getModels() }
+        onChange={ (e, v) => onModel(v) }
+        defaultValue={ (getModels().filter((m) => m.selected) || [])[0] }
+        getOptionLabel={ (option) => option.label }
+
+        renderInput={ (params) => (
+          <TextField
+            { ...params }
+            fullWidth
+            label="Choose Model"
+            placeholder="Choose Model"
+          />
+        ) }
+      />
 
       { !!props.field.model && (
-        <div className="mb-3">
-          <label className="form-label">
-            Choose Form
-          </label>
-          <Select options={ getForms() } defaultValue={ getForms().filter((f) => f.selected) } onChange={ onForm } />
-        </div>
+        <Autocomplete
+          fullWidth
+          options={ getForms() }
+          onChange={ (e, v) => onForm(v) }
+          defaultValue={ (getForms().filter((m) => m.selected) || [])[0] }
+          getOptionLabel={ (option) => option.label }
+
+          renderInput={ (params) => (
+            <TextField
+              { ...params }
+              fullWidth
+              label="Choose Form"
+              placeholder="Choose Form"
+            />
+          ) }
+        />
       ) }
 
       { !!props.field.form && (
-        <div className="mb-3">
-          <label className="form-label">
-            Choose Identifier
-          </label>
-          <Select options={ getField() } defaultValue={ getField().filter((f) => f.selected) } onChange={ onField } />
-        </div>
+        <Autocomplete
+          fullWidth
+          options={ getField() }
+          onChange={ (e, v) => onField(v) }
+          defaultValue={ (getField().filter((m) => m.selected) || [])[0] }
+          getOptionLabel={ (option) => option.label }
+
+          renderInput={ (params) => (
+            <TextField
+              { ...params }
+              fullWidth
+              label="Choose Identifier"
+              placeholder="Choose Identifier"
+            />
+          ) }
+        />
       ) }
 
       { !!getModels().filter((f) => f.selected).length && (
         <>
-          <hr />
-            
-          <div className="mb-3">
-            <label className="form-label">
-              Filter By
-            </label>
-            <Query
-              isString
+          <Box my={ 2 }>
+            <Divider />
+          </Box>
 
-              page={ props.page }
-              query={ props.field.filter }
-              dashup={ props.dashup }
-              fields={ props.getFields([props.field.form]) }
-              onChange={ (val) => props.setField(props.field, 'filter', val) }
-              getFieldStruct={ props.getFieldStruct }
-              />
-          </div>
+          <Query
+            isString
+
+            page={ props.page }
+            label="Filter By"
+            query={ props.field.filter }
+            dashup={ props.dashup }
+            fields={ props.getFields([props.field.form]) }
+            onChange={ (val) => props.setField(props.field, 'filter', val) }
+            getFieldStruct={ props.getFieldStruct }
+          />
         </>
       ) }
     </>

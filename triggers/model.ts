@@ -1,6 +1,18 @@
 // import base
 import { Struct, Query } from '@dashup/module';
 
+// debounce
+const timers = {};
+
+// debounce
+const debounce = (key, fn, timer) => {
+  // clear timeout
+  clearTimeout(timers[key]);
+
+  // set timeout
+  timers[key] = setTimeout(fn, timer);
+};
+
 /**
  * create dashup action
  */
@@ -86,39 +98,42 @@ export default class ModelTrigger extends Struct {
    * @param id 
    */
   async modelEvent(type, opts, data) {
-    // check model
-    if (!data?._meta.model) return;
-
-    // query pages where
-    const pages = await new Query(opts, 'page').where({
-      type                 : 'flow',
-      'data.trigger.type'  : 'model',
-      'data.trigger.model' : data._meta.model,
-    }).find();
-
-    // check page
-    if (!pages) return;
-
-    // trigger
-    pages.forEach((page) => {
-      // check type
-      const events = page.get('data.trigger.event') || [];
-
-      // check when
-      if (!events.includes(type)) return;
-
-      // emit new message
-      this.dashup.connection.action({
-        ...opts,
-
-        page   : page.get('_id'),
-        type   : 'page',
-        struct : 'flow',
-      }, 'trigger', {
-        type  : 'model',
-        event : type,
-        model : data,
+    // debounce by id
+    debounce(data?._id || 'undefined', async () => {
+      // check model
+      if (!data?._meta.model) return;
+  
+      // query pages where
+      const pages = await new Query(opts, 'page').where({
+        type                 : 'flow',
+        'data.trigger.type'  : 'model',
+        'data.trigger.model' : data._meta.model,
+      }).find();
+  
+      // check page
+      if (!pages) return;
+  
+      // trigger
+      pages.forEach((page) => {
+        // check type
+        const events = page.get('data.trigger.event') || [];
+  
+        // check when
+        if (!events.includes(type)) return;
+  
+        // emit new message
+        this.dashup.connection.action({
+          ...opts,
+  
+          page   : page.get('_id'),
+          type   : 'page',
+          struct : 'flow',
+        }, 'trigger', {
+          type  : 'model',
+          event : type,
+          model : data,
+        });
       });
-    });
+    }, 5 * 1000);
   }
 }

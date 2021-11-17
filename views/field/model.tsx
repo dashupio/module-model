@@ -1,10 +1,9 @@
-
 // import dependencies
-import { Form, Select } from '@dashup/ui';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Chip, Avatar, TextField, Autocomplete, CircularProgress } from '@dashup/ui';
 
 // text field
-const ModelField = (props = {}) => {
+const FieldModel = (props = {}) => {
   // aValue
   const aValue = props.value;
 
@@ -19,15 +18,16 @@ const ModelField = (props = {}) => {
     return val;
   }));
   const [search, setSearch] = useState('');
-  const [options, setOptions] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [options, setOptions] = useState([]);
 
   // get value
-  const getValue = () => {
+  const getValue = useCallback(() => {
     // by
     const by = props.field.by?.id || props.field.by;
 
     // check by/model
-    if (!by) return [];
+    if (!by) return props.field.multiple ? [] : null;
 
     // get fields
     const fields = getFields();
@@ -37,7 +37,7 @@ const ModelField = (props = {}) => {
     const byParent = byField?.parent && fields.find((f) => f.uuid === byField.parent);
 
     // check by field
-    if (!byField) return [];
+    if (!byField) return props.field.multiple ? [] : null;
 
     // get array of values
     const values = value.map((item) => {
@@ -63,10 +63,10 @@ const ModelField = (props = {}) => {
     
     // return all
     return values;
-  };
+  }, [props.field.by, props.field.multiple, props.field.value, value]);
 
   // get fields
-  const getFields = () => {
+  const getFields = useCallback(() => {
     // by
     let model = props.field.model?.id || props.field.model;
 
@@ -75,7 +75,7 @@ const ModelField = (props = {}) => {
 
     // return fields
     return [].concat(...(forms.map((f) => (f.get('data.fields') || []))));
-  };
+  }, [props.field.model]);
 
   // load value
   const loadValue = async () => {
@@ -136,6 +136,9 @@ const ModelField = (props = {}) => {
     // check by field
     if (!byField) return [];
 
+    // loading false
+    setLoading(true);
+
     // check query
     const query = props.field.filter ? JSON.parse(props.field.filter) : [];
 
@@ -157,6 +160,9 @@ const ModelField = (props = {}) => {
     // add limit
     const result = await data.limit(25).find();
 
+    // loading false
+    setLoading(false);
+
     // return map
     return result.map((item) => {
       // get label
@@ -177,10 +183,7 @@ const ModelField = (props = {}) => {
   // on change
   const onChange = (val) => {
     // set value
-    let actualValue = val?.data || (Array.isArray(val) ? val.map((v) => v?.data) : null);
-
-    // make array
-    if (!Array.isArray(actualValue)) actualValue = [actualValue].filter((v) => v);
+    const actualValue = (Array.isArray(val) ? val : [val].filter((v) => v)).map((v) => v?.data).filter((v) => v);
 
     // set value
     setValue(actualValue); 
@@ -194,62 +197,56 @@ const ModelField = (props = {}) => {
     loadOptions(search).then(setOptions);
   }, [props.field.uuid, props.field.model, props.field.form, props.field.by]);
 
-  // custom option
-  const Option = ({ data, isDisabled, isSelected, innerProps, innerRef }) => {
-    // return jsx
-    return !isDisabled ? (
-      <div
-        ref={ innerRef }
-        className={ `dropdown-item d-flex align-items-center flex-row px-3 py-2${isSelected ? ' active' : ''}` }
-        { ...innerProps }
-      >
-        { data.color && (
-          <span className={ `badge bg-${data.color} me-2` }>
-            &nbsp;
-          </span>
-        ) }
-        <span className="text-overflow">
-          { data.label }
-        </span>
-      </div>
-    ) : null;
-  };
-
   // return text field
   return (
-    <Form.Group className={ props.noLabel ? '' : 'mb-3' } controlId={ props.field.uuid }>
-      { !props.noLabel && (
-        <Form.Label>
-          { props.field.label || (
-            <a href="#!" onClick={ (e) => !props.onConfig(props.field) && e.preventDefault() }>
-              <i>Set Label</i>
-            </a>
-          ) }  
-        </Form.Label>
-      ) }
-      <Select
-        async
-        isClearable
-        cacheOptions
+    <Autocomplete
+      value={ getValue() }
+      multiple={ props.field.multiple }
+      options={ options }
+      readOnly={ props.readOnly }
+      fullWidth
+      onChange={ (e, v) => onChange(v) }
+      getOptionLabel={ (option) => option.label || option }
+      isOptionEqualToValue={ (a, b) => a?.value === b?.value }
+      
+      renderTags={ (value: Array<object>, getTagProps) => {
+        // render chips
+        return value.map((option: object, index: number) => {
+          // return jsx
+          return (
+            <Chip
+              label={ option.label }
+              avatar={ <Avatar name={ option.label } src={ option.image } /> }
+              { ...getTagProps({ index }) }
+            />
+          );
+        });
+      } }
 
-        isMulti={ props.field.multiple }
-        onChange={ onChange }
-        readOnly={ props.readOnly }
-        components={ { Option } }
-        placeholder={ props.field.placeholder || `Select ${props.field.label}` }
-        loadOptions={ loadOptions }
-        defaultValue={ getValue() }
-        onInputChange={ (v) => setSearch(v) }
-        defaultOptions={ options }
+      renderInput={ (params) => (
+        <TextField
+          { ...params }
+          fullWidth
+          value={ search }
+          label={ props.field.label }
+          onChange={ (e) => onChange(e.target.value) }
+          placeholder={ props.field.placeholder || `Enter ${props.field.label}` }
+
+          InputProps={ {
+            ...params.InputProps,
+            readOnly     : !!props.readOnly,
+            endAdornment : (
+              <>
+                { loading ? <CircularProgress color="inherit" size={ 20 } /> : null }
+                { params.InputProps.endAdornment }
+              </>
+            ),
+          } }
         />
-      { !!props.field.help && !props.noLabel && (
-        <Form.Text className="form-help">
-          { props.field.help }
-        </Form.Text>
       ) }
-    </Form.Group>
+    />
   );
 };
 
 // export default
-export default ModelField;
+export default FieldModel;

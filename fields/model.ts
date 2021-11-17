@@ -105,29 +105,38 @@ export default class ModelField extends Struct {
     if (loading[id]) return loading[id];
 
     // return promise
-    loading[id] = new Promise((resolve) => {
+    loading[id] = new Promise((resolve, reject) => {
+      // check is object id
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        // get page
+        return new Query({
+          dashup : opts.dashup,
+        }, 'page').findById(field?.form?.id || field.form).then((page) => {
+          // query
+          new Query({
+            form   : field?.form?.id || field.form,
+            page   : field?.model?.id || field.model,
+            model  : field?.model?.id || field.model,
+            dashup : opts.dashup,
+          }, 'model').where({
+            [page.get('data.fields').find((f) => f.uuid === field.by).name || field.by] : id,
+          }).findOne().then(resolve).catch(reject);
+        }).catch(reject);
+      }
+
       // query model
       new Query({
         form   : field?.form?.id || field.form,
         page   : field?.model?.id || field.model,
         model  : field?.model?.id || field.model,
         dashup : opts.dashup,
-      }, 'model').findById(id).then(resolve);
+      }, 'model').findById(id).then(resolve).catch(reject);
     });
 
-    // add timeout
-    loading[id].then((data) => {
-      // check data
-      if (!data) {
-        delete loading[id];
-        return;
-      }
-
-      // cache for 2 seconds
-      setTimeout(() => {
-        delete loading[id];
-      }, 2000);
-    });
+    // cache for 2 seconds
+    setTimeout(() => {
+      delete loading[id];
+    }, 60 * 1000);
 
     // return loading
     return loading[id];
