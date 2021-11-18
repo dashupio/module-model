@@ -1,6 +1,7 @@
 
 // import dependencies
 import React from 'react';
+import { Chip, Stack, Avatar } from '@dashup/ui';
 
 // model field
 const ModelFieldView = (props = {}) => {
@@ -51,16 +52,19 @@ const ModelFieldView = (props = {}) => {
 
   // return text field
   return (
-    <div>
+    <Stack spacing={ 1 } flexWrap="wrap">
       { getValue().map((model, i) => {
         // return jsx
         return (
-          <a key={ `${props.id}-model-${model.id}` } href={ `/app/${model.form}/${model.id}` } className="btn btn-sm btn-primary me-1">
-            { model.name }
-          </a>
+          <Chip
+            key={ `${props.id}-model-${model.id}` }
+            href={ `/app/${model.form}/${model.id}` }
+            label={ model.name }
+            avatar={ <Avatar name={ model.name } src={ model.image } /> }
+          />
         );
       }) }
-    </div>
+    </Stack>
   );
 };
 

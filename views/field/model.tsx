@@ -226,6 +226,14 @@ const FieldModel = (props = {}) => {
       renderInput={ (params) => (
         <TextField
           { ...params }
+          sx={ {
+            '& label': {
+              color : props.field.color?.hex,
+            },
+            '& fieldset': {
+              borderColor : props.field.color?.hex,
+            },
+          } }
           fullWidth
           value={ search }
           label={ props.field.label }
