@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Select } from '@dashup/ui';
+import { TextField, MenuItem } from '@dashup/ui';
 
 // create model trigger
 const TriggerModel = (props = {}) => {
@@ -34,18 +34,42 @@ const TriggerModel = (props = {}) => {
   // return jsx
   return (
     <>
-      <div className="mb-3">
-        <label className="form-label">
-          Model
-        </label>
-        <Select options={ getModel() } defaultValue={ getModel().filter((f) => f.selected) } onChange={ (val) => props.setTrigger('model', val?.value) } />
-      </div>
-      <div className="mb-3">
-        <label className="form-label">
-          Event(s)
-        </label>
-        <Select options={ getEvent() } defaultValue={ getEvent().filter((f) => f.selected) } onChange={ (val) => props.setTrigger('event', val.map((v) => v?.value)) } isMulti />
-      </div>
+      <TextField
+        label="Model"
+        value={ props.page.get('data.trigger.model') || '' }
+        select
+        onChange={ (e) => props.setTrigger('model', e.target.value) }
+        fullWidth
+      >
+        { getModel().map((model) => {
+          // return jsx
+          return (
+            <MenuItem key={ model.value } value={ model.value }>
+              { model.label }
+            </MenuItem>
+          );
+        }) }
+      </TextField>
+      <TextField
+        label="Event(s)"
+        value={ Array.isArray(props.page.get('data.trigger.event')) ? props.page.get('data.trigger.event') : [props.page.get('data.trigger.event')].filter((e) => e) }
+        select
+        onChange={ (e) => props.setTrigger('model', e.target.value) }
+        fullWidth
+
+        SelectProps={ {
+          multiple : true,
+        } }
+      >
+        { getEvent().map((model) => {
+          // return jsx
+          return (
+            <MenuItem key={ model.value } value={ model.value }>
+              { model.label }
+            </MenuItem>
+          );
+        }) }
+      </TextField>
     </>
   );
 };

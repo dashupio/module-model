@@ -2,7 +2,7 @@
 // import react
 import React from 'react';
 import shortid from 'shortid';
-import { Query, Select } from '@dashup/ui';
+import { Query, Stack, Card, CardContent, IconButton, Icon, TextField, MenuItem, Box, Button, Divider } from '@dashup/ui';
 
 // create action model
 const ActionModel = (props = {}) => {
@@ -108,63 +108,114 @@ const ActionModel = (props = {}) => {
   // return jsx
   return (
     <>
-      <div className="mb-3">
-        <label className="form-label">
-          Update
-        </label>
-        <Select options={ getTypes() } defaultValue={ getTypes().filter((f) => f.selected) } onChange={ (val) => props.setAction(props.action, 'update', val?.value) } />
-      </div>
+      <TextField
+        label="Update"
+        value={ props.action.update || 'this' }
+        select
+        onChange={ (e) => props.setAction(props.action, 'update', e.target.value) }
+        fullWidth
+      >
+        { getTypes().map((model) => {
+          // return jsx
+          return (
+            <MenuItem key={ model.value } value={ model.value }>
+              { model.label }
+            </MenuItem>
+          );
+        }) }
+      </TextField>
 
       { !!modelTypes.includes(props.action.update || 'this') && (
-        <div className="mb-3">
-          <label className="form-label">
-            Model
-          </label>
-          <Select options={ getModel() } defaultValue={ getModel().filter((f) => f.selected) } onChange={ (val) => props.setAction(props.action, 'model', val?.value) } />
-        </div>
+        <TextField
+          label="Model"
+          value={ props.action.model || '' }
+          select
+          onChange={ (e) => props.setAction(props.action, 'model', e.target.value) }
+          fullWidth
+        >
+          { getModel().map((model) => {
+            // return jsx
+            return (
+              <MenuItem key={ model.value } value={ model.value }>
+                { model.label }
+              </MenuItem>
+            );
+          }) }
+        </TextField>
       ) }
+
       { !!queryTypes.includes(props.action.update || 'this') && (
-        <div className="mb-3">
-          <label className="form-label">
-            Where
-          </label>
-          <Query
-            isString
+        <Query
+          isString
 
-            page={ props.page }
-            query={ props.action.filter }
-            dashup={ props.dashup }
-            fields={ getFields(true) }
-            onChange={ (val) => props.setAction(props.action, 'filter', val) }
-            getFieldStruct={ props.getFieldStruct }
-            />
-        </div>
+          page={ props.page }
+          label="Where"
+          query={ props.action.filter }
+          dashup={ props.dashup }
+          fields={ getFields(true) }
+          onChange={ (val) => props.setAction(props.action, 'filter', val) }
+          getFieldStruct={ props.getFieldStruct }
+        />
       ) }
 
-      <hr />
+      <Box my={ 2 }>
+        <Divider />
+      </Box>
 
       { !!(props.action.model || props.action.update === 'this' || !props.action.update) && (
         <>
-          <div className="card mb-3">
-            <div className="card-body pb-2">
-              { (props.action.fields || []).map((field, i) => {
-                // return jsx
-                return (
-                  <div key={ `field-${props.action.uuid}-${i}` } className="d-flex align-items-center mb-2">
-                    <Select options={ getFields() } className="w-25 me-2" defaultValue={ getFields(field).filter((f) => f.selected) } onChange={ (val) => onField(field, 'field', val?.value) } />
-                    <input className="form-control flex-1" value={ field.value || '' } onChange={ (e) => onField(field, 'value', e.target.value) } />
-                    <button className="btn btn-danger ms-2" onClick={ (e) => onRemove(e, i) }>
-                      <i className="fa fa-times" />
-                    </button>
-                  </div>
-                );
-              }) }
-            </div>
-          </div>
+          <Stack spacing={ 1 }>
+            { (props.action.fields || []).map((field, i) => {
+              // return jsx
+              return (
+                <Card key={ `field-${props.action.uuid}-${i}` } variant="outlined" sx={ {
+                  backgroundColor : 'rgba(0, 0, 0, 0)',
+                } }>
+                  <CardContent>
+                    <Stack direction="row" spacing={ 1 } sx={ {
+                      width      : '100%',
+                      flexWrap   : 'wrap',
+                      alignItems : 'center',
+                    } }>
+                      <TextField
+                        sx={ { flex : 1 } }
+                        label="Field"
+                        value={ field.field || field.name || '' }
+                        select
+                        onChange={ (e) => onField(field, 'field', field.name || field.uuid) }
+                      >
+                        { getFields().map((field) => {
+                          // return jsx
+                          return (
+                            <MenuItem key={ field.value } value={ field.value }>
+                              { field.label }
+                            </MenuItem>
+                          );
+                        }) }
+                      </TextField>
 
-          <button className="btn btn-success" onClick={ (e) => onCreate(e) }>
-            Add Field
-          </button>
+                      <IconButton color="error" onClick={ (e) => onRemove(e, i) }>
+                        <Icon type="fas" icon="trash" />
+                      </IconButton>
+                    </Stack>
+
+                    <TextField
+                      label="Value"
+                      value={ field.value || '' }
+                      onChange={ (e) => onField(field, 'value', e.target.value) }
+                      fullWidth
+                    />
+                  </CardContent>
+                </Card>
+              );
+            }) }
+          </Stack>
+
+          <Box textAlign="right">
+            <Button color="success" variant="contained" onClick={ (e) => onCreate(e) }>
+              Add Field
+            </Button>
+          </Box>
         </>
       ) }
     </>
