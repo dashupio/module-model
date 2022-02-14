@@ -58,7 +58,7 @@ const ActionModel = (props = {}) => {
     return fields.map((f) => {
       // return object
       return {
-        value    : f.uuid,
+        value    : f.name || field.uuid,
         label    : f.label,
         selected : f.uuid === (field.field || field.name),
       };
@@ -180,9 +180,9 @@ const ActionModel = (props = {}) => {
                       <TextField
                         sx={ { flex : 1 } }
                         label="Field"
-                        value={ field.field || field.name || '' }
+                        value={ field.field || '' }
                         select
-                        onChange={ (e) => onField(field, 'field', field.name || field.uuid) }
+                        onChange={ (e) => onField(field, 'field', e.target.value) }
                       >
                         { getFields().map((field) => {
                           // return jsx

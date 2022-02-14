@@ -54,7 +54,7 @@ const TriggerModel = (props = {}) => {
         label="Event(s)"
         value={ Array.isArray(props.page.get('data.trigger.event')) ? props.page.get('data.trigger.event') : [props.page.get('data.trigger.event')].filter((e) => e) }
         select
-        onChange={ (e) => props.setTrigger('model', e.target.value) }
+        onChange={ (e) => props.setTrigger('event', e.target.value) }
         fullWidth
 
         SelectProps={ {
